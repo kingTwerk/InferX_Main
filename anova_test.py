@@ -240,13 +240,13 @@ def anova(data, file):
                         st.plotly_chart(fig)      
 
             except TypeError:
-                    st.error(f'❌ {dependent_column_name} is categorical/discrete with at least 2 unique values and {independent_column_name} is continuous.')  
+                    st.error(f'❌ [{dependent_column_name}] is categorical/discrete with at least 2 unique values and [{independent_column_name}] is continuous.')  
             
             except ValueError:
-                    st.error(f'❌ {dependent_column_name} is categorical/discrete with at least 2 unique values and {independent_column_name} is continuous.')  
+                    st.error(f'❌ [{dependent_column_name}] is categorical/discrete with at least 2 unique values and [{independent_column_name}] is continuous.')  
 
             except AttributeError:
-                    st.error(f'❌ {dependent_column_name} is categorical/discrete with at least 2 unique values and {independent_column_name} is continuous.')  
+                    st.error(f'❌ [{dependent_column_name}] is categorical/discrete with at least 2 unique values and [{independent_column_name}] is continuous.')  
 
     # The F-value is also known as the F-statistic or F-ratio. It is a measure of the variability between group means relative to the variability within each group.
     # The p-value is the probability of obtaining a result as extreme as the observed result, assuming that the null hypothesis is true. It is used to determine the 
