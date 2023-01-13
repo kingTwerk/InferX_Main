@@ -130,9 +130,8 @@ def logistic_regression(data, file):
                     else:
                         st.error(f"* The model is performing poorly, with an accuracy of less than 60%. An accuracy of less than 60% typically indicates that the model is making accurate predictions for a small proportion of the test instances and there is a significant need for improvement.")
 
-                    #st.write("Confusion Matrix:")
-                    st.metric("Confusion Matrix:",f"{cm:.2f}")
-                    #st.write(cm)
+                    st.write("Confusion Matrix:")
+                    st.write(cm)
                     if cm[1,1] > cm[0,0]:
                         st.success(f"* The model is making more true positive predictions than true negative predictions. The model is making more correct predictions than incorrect predictions. This is generally a good thing, as it indicates that the model is able to accurately classify a large proportion of the test instances.")
                     elif cm[1,1] < cm[0,0]:
