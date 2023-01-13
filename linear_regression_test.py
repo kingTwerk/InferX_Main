@@ -173,11 +173,12 @@ def linear_regression(data, file):
                             st.error(f"* There is a {relationship} correlation between the {x_column_name} and {y_column_name} variables (r = {r:.2f}, p = {p:.2e}). {explanation}")  
             
             except TypeError:
-                st.error(f'❌ Both {x_column_name} and {y_column_name} columns need to be continuous values.')  
+                st.error(f'❌ Both [{x_column_name}] and [{y_column_name}] columns need to be continuous values.')  
             except ValueError:
-                st.error(f'❌ Both {x_column_name} and {y_column_name} columns need to be continuous values.')     
+                st.error(f'❌ Both [{x_column_name}] and [{y_column_name}] columns need to be continuous values.')     
             except AttributeError:
-                st.error(f'❌ Both {x_column_name} and {y_column_name} columns need to be continuous values.')  
+                st.error(f'❌ Both [{x_column_name}] and [{y_column_name}] columns need to be continuous values.')  
+ 
 
 
 
