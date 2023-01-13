@@ -4,8 +4,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.offline as py
-from st_aggrid import AgGrid, GridUpdateMode, JsCode
-from st_aggrid.grid_options_builder import GridOptionsBuilder
+
 from sklearn.preprocessing import OrdinalEncoder
 from scipy.stats import chi2_contingency, chi2
 
