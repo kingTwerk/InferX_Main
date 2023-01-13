@@ -89,9 +89,12 @@ def chi_square_fixed(fixed_data, col1, col2):
                 st.write("\n")
         
         except TypeError:
-                st.error(f'{dependent_column_name} is categorical/discrete with at least 2 unique values and {independent_column_name} is continuous.')  
-
-
+            st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
+        except ValueError:
+            st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
+        except AttributeError:
+            st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
+ 
 def chi_square(data, col1, col2):
 
     # Select only categorical columns
@@ -179,15 +182,11 @@ def chi_square(data, col1, col2):
                 st.write("\n")
 
         except TypeError:
-            st.error(f'❌ Both {dependent_column_name} and {independent_column_name} columns need to be categorical/discrete with at least 2 unique values.')  
+            st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
         except ValueError:
-            st.error(f'❌ Both {dependent_column_name} and {independent_column_name} columns need to be categorical/discrete with at least 2 unique values.')  
+            st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
         except AttributeError:
-            st.error(f'❌ Both {dependent_column_name} and {independent_column_name} columns need to be categorical/discrete with at least 2 unique values.')  
-
-
-	  
-
+            st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
 
 #The chi-square test is a statistical test used to determine whether there is a significant association between two categorical variables. To perform a chi-square test, you need to have a dataset containing two categorical variables and a target variable.
 
