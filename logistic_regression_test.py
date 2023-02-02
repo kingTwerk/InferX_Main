@@ -11,52 +11,28 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 
 from streamlit_extras.colored_header import colored_header
-#from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 import os
 import datetime
 
 def logistic_regression(data, file):
-    # Select only numeric columns
+ 
     data = data.select_dtypes(include=['object','float','int'])
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.header("Logistic Regression")
     st.subheader("[👁️‍🗨️] Table Preview:")
-    # Check if a file was uploaded
+ 
     if file is not None:
-        # Extract the file name from the UploadedFile object
+       
         file_name = file.name
         st.dataframe(data)
-        #ag_grid = AgGrid(
-        #data,
-        #key='unique_key_1',
-        #height=300, 
-        #width='100%',
-        #data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
-        #update_mode=GridUpdateMode.FILTERING_CHANGED,
-        #fit_columns_on_grid_load=True
-        #allow_unsafe_jscode=True, #Set it to True to allow jsfunction to be injected
-        #)
-        button, log_row, log_col = st.columns((5,1,1), gap="small")
+
+        log_row, log_col = st.columns((1,5), gap="small")
         rows = data.shape[0]
         cols = data.shape[1]
         with log_row:
             st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
         with log_col:
             st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
-        with button:
-            if st.button("Download CSV"):
-                # Select only numeric columns
-                #ag_grid = data.select_dtypes(include=['float'])
-                data = data.select_dtypes(include=['object','float','int'])
-                # Get current date
-                now = datetime.datetime.now()
-                date_string = now.strftime("%Y-%m-%d")
-                # Set default save location to desktop
-                desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
-                save_path = os.path.join(desktop, f'logistic_filtered_data_csv_{date_string}.csv')
-                # write data to the selected file
-                data.to_csv(save_path, index=False)
-                st.success(f'File saved successfully to {save_path}!')
 
         colored_header(
         label="",
@@ -65,15 +41,13 @@ def logistic_regression(data, file):
         )  
 
         column_names = data.columns.tolist()
-        # Get the independent and dependent variables from the user
+        
         st.write("\n")
         x_col = st.selectbox('➕ Select the column name for the X (independent/CATEGORICAL/CONTINUOUS/DISCRETE) variable:', column_names)
         st.write("\n")
         y_col = st.selectbox('➕ Select the column name for the y (dependent/BINARY) variable:', column_names)
         st.write("\n")
-        #st.write(data[x_col].nunique())
-        #st.write(data[y_col].nunique())
-    # Check if the dependent variable is binary
+
 
         if y_col == x_col:
             st.error("❌ Both columns are the same. Please select different columns.")
@@ -88,97 +62,66 @@ def logistic_regression(data, file):
                 elif (data[x_col].nunique() < 2):
                     st.error(f'❌ 4 {x_col} column must be continuous/categorical and discrete data with atleast 2 unique values.')     
                 else:
-                    # Preprocess the data as needed
-                    # (e.g., handle missing values, encode categorical variables)
+               
                     for col in data.columns:
-                        # Check if the column is a categorical variable
+                      
                         if data[col].dtype == "object":
-                            # Create a label encoder
+                           
                             le = LabelEncoder()
 
-                            # Fit the label encoder to the column
                             le.fit(data[col])
 
-                            # Transform the column
                             data[col] = le.transform(data[col])
 
-                    # Convert dataframe to NumPy array
                     X = data[x_col].to_numpy()
                     y = data[y_col].to_numpy()
 
-                    # Check if X and y are 1D arrays
                     if len(X.shape) == 1:
-                        # Reshape X and y to 2D arrays
+                       
                         X = X.reshape(-1, 1)
                         y = y.reshape(-1, 1)
 
-                    # Ask the user for the test size
                     st.write("\n")
                     test_size = st.slider('➕ Choose the test size:', 0.1, 0.5, 0.2)
 
-                    # Calculate the training size
                     training_size = 1 - test_size
 
-                    # Random state with a slider
-                    # seed_value = st.selectbox("Choose Random Seed", ("None", "Custom"))
-                    # if seed_value == "Custom":
-                    #     random_state = st.slider('Customize the random seed number', 0, 100, 42)
-                    # else:
-                    #     random_state = None
+                    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size,random_state=0) 
 
-                    # Split the data into training and test sets
-                    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size,random_state=0) #,random_state=0
-
-                    # st.write(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
-
-                    # Calculate the mean of Y
                     mean_y = np.mean(y_train)
 
-                    # Calculate the median of Y
                     median_y = np.median(y_train)
 
-                    # Calculate the mode of Y
                     mode_y = data[y_col].mode()[0]
 
-                    # Calculate the standard deviation of Y
                     std_y = np.std(y_train)
 
-                    # Get the sample size of the training set
                     training_set_size = X_train.shape[0]
 
-                    # Get the sample size of the test set
                     test_set_size = X_test.shape[0]
 
-                    # Write the sample sizes to the console or to the app 
                     st.write(f"Training set size: {training_set_size}")
                     st.write(f"Test set size: {test_set_size}")
 
-                    # Display the dataframe
-                    #st.dataframe(train_test_df)
-
-                    # Train the model
                     model = LogisticRegression()
                     model.fit(X_train, y_train)
 
-                    # Test the model
                     y_pred = model.predict(X_test)
 
-                    # Calculate evaluation metrics
                     accuracy = model.score(X_test, y_test)
                     cm = confusion_matrix(y_test, y_pred)
                     precision = precision_score(y_test, y_pred)
                     f1 = f1_score(y_test, y_pred)
                     recall = recall_score(y_test, y_pred)
 
-                    # Print evaluation metrics
                     st.write("\n")
                     st.subheader("[✍] Logistic Regression Test")
                     st.write("\n")
-                    #st.write(f"Accuracy: {accuracy:.2f}")
+                    
                     Accuracy1a, Accuracy2a = st.columns((1,5), gap="small")
                     with Accuracy1a:
                         st.metric("Accuracy",f"{accuracy:.2f}")
-                    #st.write(f"Accuracy:", accuracy)
+
                     with Accuracy2a:
                         if accuracy > 0.8:
                             st.success(f"* The model is performing well, with an accuracy of more than 80%.")
@@ -189,8 +132,7 @@ def logistic_regression(data, file):
                     st.write("Confusion Matrix:")
                     Matrix1a, Matrix2a = st.columns((1,5), gap="small")
                     with Matrix1a:
-                        #st.metric("Confusion Matrix:",f"{cm:.2f}")
-                        #st.metric("Confusion Matrix:", cm)
+                
                         st.write(cm)
                     with Matrix2a:
                         if cm[1,1] > cm[0,0]:
@@ -201,7 +143,7 @@ def logistic_regression(data, file):
                             st.info(f"* The model is making an equal number of true positive and true negative predictions. The model is making an equal number of correct and incorrect predictions. This could indicate that the model is performing poorly.")
                     Precision1a, Precision2a = st.columns((1,5), gap="small")
                     with Precision1a:
-                        #st.write(f"Precision:", precision)
+                    
                         st.metric("Precision:",f"{precision:.2f}")
                     with Precision2a:    
                         if precision > 0.8:
@@ -213,7 +155,7 @@ def logistic_regression(data, file):
 
                     Recall1a, Recall2a = st.columns((1,5), gap="small")
                     with Recall1a:
-                        #st.write(f"Recall:", recall)
+                       
                         st.metric("Recall:",f"{recall:.2f}")
                     with Recall2a:
                         if recall > 0.8:
@@ -225,7 +167,7 @@ def logistic_regression(data, file):
 
                     f1_1a, f1_2a = st.columns((1,5), gap="small")
                     with f1_1a:
-                        #st.write(f"F1 score:", f1)
+                       
                         st.metric("F1 score:",f"{f1:.2f}")
                     with f1_2a:    
                         if f1 > 0.8:
@@ -238,7 +180,7 @@ def logistic_regression(data, file):
                     st.write("\n")
                     st.subheader("[📝] Descriptive Statistics for Y")
                     st.write("\n")
-                    #st.write(f'Mean: {mean_y:.2f}')
+                   
                     mean1a, mean2a = st.columns((1,5), gap="small")
                     with mean1a:
                         st.metric("Mean:",f"{mean_y:.2f}")
@@ -277,11 +219,9 @@ def logistic_regression(data, file):
                     else:
                         st.info(f'* The standard deviation is low, which indicates that the data is concentrated.')
             
-                    if mean_y > (3 * std_y):
-                        #st.warning(f'* The difference between the mean and median is greater than 3 times the standard deviation, which suggests that there are outliers in the data.')
+                    if mean_y > (3 * std_y):       
                         st.warning(f'* The difference between the mean is greater than 3 times the standard deviation, (Mean: {mean_y:.2f}, UCL:{mean_y + (3 * std_y):.2f}, LCL:{mean_y - (3 * std_y):.2f}) which suggests that there are outliers in the data.')
                     else:
-                        #st.info(f'* The difference between the mean and median is less than or equal to 3 times the standard deviation, which suggests that there are no significant outliers in the data.')
                         st.info(f'* The difference between the mean is less than or equal to 3 times the standard deviation, (Mean: {mean_y:.2f}, UCL:{mean_y + (3 * std_y):.2f}, LCL:{mean_y - (3 * std_y):.2f}), which suggests that there are no significant outliers in the data.')
                     
 
