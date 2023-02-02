@@ -29,10 +29,9 @@ def linear_regression(data, file):
     if file is not None:
  
         st.info("Non-numerical columns are removed.")
-        st.dataframe(data)
       
         st.subheader("[👁️‍🗨️] Table Preview:")
-
+        st.dataframe(data)
         slr_row, slr_col = st.columns((1,5), gap="small")
         rows = data.shape[0]
         cols = data.shape[1]
