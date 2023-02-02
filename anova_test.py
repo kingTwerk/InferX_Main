@@ -5,7 +5,6 @@ import plotly.graph_objects as go
 from streamlit_extras.colored_header import colored_header
 from scipy.stats import f_oneway
 from scipy.stats import f
-#from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 import os
 import datetime
 import math
@@ -45,19 +44,13 @@ def anova(data, file):
         description="",
         color_name="violet-70",
         )  
-
-        #st.write(f"Number of rows :{data.shape[0]:.0f}")
-        #st.write(f"Number of columns :{data.shape[1]:.0f}")    
-        # Create an ag-Grid table using the AgGrid component
-        #ag_grid = AgGrid(data, height=300)
         st.write("\n")
         column_names = data.columns.tolist()
-        # Ask the user to select the column names for the independent and dependent variables
         independent_column_name = st.selectbox('➕ Select the column name for the X (independent/DISCRETE) variable:', column_names)
         st.write("\n")
         dependent_column_name = st.selectbox('➕ Select the column name for the y (dependent/CONTINUOUS) variable:', column_names)
         st.write("\n")
-        # Check if the selected columns are the same
+    
         if independent_column_name == dependent_column_name:
             st.error("❌ Both columns are the same. Please select different columns.")
         else:           
@@ -75,8 +68,6 @@ def anova(data, file):
                     st.error(f'❌ {dependent_column_name} column must be a continuous variable.') 
                 
                 else:
-                    # Perform the ANOVA test
-                    #st.write("\n")
                     colored_header(
                         label="",
                         description="",
@@ -87,22 +78,17 @@ def anova(data, file):
                     ind_col_data = data[independent_column_name].values
                     dep_col_data = data[dependent_column_name].values
                     result = f_oneway(ind_col_data, dep_col_data)
-                    #st.write("F-value: ", result.statistic)
-                    #st.write("p-value: {:.30f}".format(result.pvalue))
-                    #st.metric("p-value", "{:.30f}".format(result.pvalue))
-                                                     
             
-                    # Extract the F-value and p-value from the result
+              
                     f_value = result.statistic
-                    # Extract the p-value from the result
+                 
                     p_value = result.pvalue
 
                     alpha = 0.05
-                    # Determine the number of groups in your analysis
+                   
                     k = len(data[independent_column_name].unique())
                     dfn = k-1
 
-                    # Determine the total number of observations in all the groups
                     n = len(data)
                     dfd = n-k
                     c_value = f.ppf(1-alpha, dfn, dfd)
@@ -124,8 +110,7 @@ def anova(data, file):
                                 st.error("The calculated F ratio is not greater than the critical value, the null hypothesis is not rejected, and the result is not considered statistically significant. This means that there is no significant difference between the means of the groups.")
                         
                         value_2a, value_2b = st.columns((1,5), gap="small")   
-                        #st.write(f'P-value (significance level):', p_value) 
-                        #st.write(f'P-value (significance level): {p_value:.2e}')
+      
                         with value_2a:
                             st.metric("P-value (significance level):",f"{p_value:.2f}")
                         with value_2b:
@@ -141,25 +126,17 @@ def anova(data, file):
                         x = data[independent_column_name]
                         y = data[dependent_column_name]
 
-                        # Create a trace for the box plot
                         traceBox = go.Box(x=x, y=y, name=dependent_column_name)
 
-                        # Create a data object with the trace
                         dataBox = [traceBox]
-                        
-                        # Create a box plot using plotly
-                        
-                        # Calculate the summary statistics for the data
+
                         summary_statsY = data[dependent_column_name].describe()
 
-                        # Extract the mean, median, and standard deviation from the summary statistics for Y
                         meanY = summary_statsY['mean']
                         medianY = summary_statsY['50%']
                         stdY = summary_statsY['std']
-                        modeY = data[dependent_column_name].mode()  # This will return the mode of the dependent_column_name
-                        
-                        #st.write("Summary Statistics for Y:")
-                        #st.write(f'Mean:', meanY) # st.write(f"The mean of the data is {mean:.3f}.")
+                        modeY = data[dependent_column_name].mode()  
+                       
                         st.write("\n")
                         st.subheader("[📝] Descriptive Statistics for Y")
                         st.write("\n")
@@ -168,8 +145,7 @@ def anova(data, file):
                             st.metric("Mean:",f"{meanY:.2f}")
                         with mean2a:
                             st.info("* The mean is the average of all the values in the data set. It is calculated by adding up all the values and then dividing by the total number of values.")
-                        #write(f'Median:', medianY) # st.write(f"The median of the data is {median:.3f}.")                        
-                        
+                                       
                         median1a, median2a = st.columns((1,5), gap="small")
                         with median1a:
                             st.metric("Median:",f"{medianY:.2f}")
@@ -185,7 +161,7 @@ def anova(data, file):
                                     st.metric("Modes:",f"{modeY[i]:.2f}")
                                 with mode2a:    
                                     st.info("* The mode is the value that appears most frequently in the data set. A data (set can have one mode, more than one mode, or no mode at all.")
-                        #st.write(f'Standard Devidation:', stdY) # st.write(f"The standard deviation of the data is {std:.3f}.")
+                    
                         std1a, std2a = st.columns((1,5), gap="small")
                         with std1a:
                             st.metric("Standard Deviation:",f"{stdY:.2f}")
@@ -208,10 +184,10 @@ def anova(data, file):
                         else:
                             st.info(f'* The standard deviation is low, which indicates that the data is concentrated.')
                         if meanY > (3 * stdY):
-                            #st.warning(f'* The difference between the mean and median is greater than 3 times the standard deviation, which suggests that there are outliers in the data.')
+
                             st.warning(f'* The difference between the mean is greater than 3 times the standard deviation, (Mean: {meanY:.2f}, UCL:{meanY + (3 * stdY):.2f}, LCL:{meanY - (3 * stdY):.2f}) which suggests that there are outliers in the data.')
                         else:
-                            #st.info(f'* The difference between the mean and median is less than or equal to 3 times the standard deviation, which suggests that there are no significant outliers in the data.')
+                            
                             st.info(f'* The difference between the mean is less than or equal to 3 times the standard deviation, (Mean: {meanY:.2f}, UCL:{meanY + (3 * stdY):.2f}, LCL:{meanY - (3 * stdY):.2f}), which suggests that there are no significant outliers in the data.')
                         if p_value <= 0.05:
                             result = "Reject Null Hypothesis"
