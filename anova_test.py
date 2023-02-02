@@ -30,7 +30,7 @@ def anova(data, file):
         ##allow_unsafe_jscode=True, #Set it to True to allow jsfunction to be injected
         #)
 
-        button,anova_row, anova_col = st.columns((5,1,1), gap="small")
+        anova_row, anova_col = st.columns((5,1,1), gap="small")
         rows = data.shape[0]
         cols = data.shape[1]
         with anova_row:
@@ -38,7 +38,7 @@ def anova(data, file):
         with anova_col:
             st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
 
-        with button:
+
 
         colored_header(
         label="",
