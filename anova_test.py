@@ -30,7 +30,7 @@ def anova(data, file):
         ##allow_unsafe_jscode=True, #Set it to True to allow jsfunction to be injected
         #)
 
-        anova_row, anova_col = st.columns((1,1), gap="small")
+        anova_row, anova_col = st.columns((1,5), gap="small")
         rows = data.shape[0]
         cols = data.shape[1]
         with anova_row:
