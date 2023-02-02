@@ -5,7 +5,7 @@ import openpyxl
 from scipy.stats import chi2_contingency
 from scipy.stats import chi
 from streamlit_extras.colored_header import colored_header
-from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
+#from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 import os
 import datetime
 
