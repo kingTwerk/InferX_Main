@@ -181,6 +181,7 @@ def anova(data, file):
                             st.info(f'* The difference between the mean is less than or equal to 3 times the standard deviation, (Mean: {meanY:.2f}, UCL:{meanY + (3 * stdY):.2f}, LCL:{meanY - (3 * stdY):.2f}), which suggests that there are no significant outliers in the data.')
                         st.write("\n")
                         st.subheader("[🧪] Hypothesis Testing")
+                        st.write("\n")
                         if p_value <= 0.05:
                             result = "Reject Null Hypothesis"
                             conclusion = "There is sufficient evidence to suggest that {} is a factor on {}.".format(independent_column_name, dependent_column_name)
