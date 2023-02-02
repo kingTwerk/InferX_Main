@@ -4,17 +4,23 @@ import numpy as np
 import openpyxl
 from scipy.stats import chi2_contingency
 from scipy.stats import chi
+from streamlit_extras.colored_header import colored_header
+from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
+import os
+import datetime
+
 import linear_regression_test
 import anova_test
 import chi_square_test
 import logistic_regression_test
 
-st.set_page_config(page_title="INFER-X", layout='wide', initial_sidebar_state='expanded', page_icon='👁️‍🗨️')
+st.set_page_config(page_title="INFER-X-sidebar", layout='wide', initial_sidebar_state='expanded', page_icon='👁️‍🗨️')
 
-st.title("👨🏽‍💻INFER-X") 
-st.subheader("[Inferential Statistical Tests Recommender]")
+#st.title("👨🏽‍💻 Inferential Statistical Tests Recommender [INFER-X]") 
+st.sidebar.title("⚙ INFER-X") 
+st.title("🖊️ Inferential Statistical Tests Recommender")
 
-file = st.file_uploader("➕ Choose a file", type=["csv", "xlsx"])
+file = st.sidebar.file_uploader("➕ UPLOAD A FILE", type=["csv", "xlsx"])
 
 @st.experimental_memo
 def fix_dataframe(df):
@@ -34,68 +40,122 @@ if file is not None:
 
     if file_name.endswith(".csv"):
         try:
-            data = pd.read_csv(file, na_values=["*","**","", "NA", "N/A","-"])
-            st.subheader("👁️‍🗨️ Data Preview:")
+            #data = pd.read_csv(file, na_values=["*","**","", "NA", "N/A","-"])
+            data = pd.read_csv(file) 
+            #csv_orig_row, csv_orig_col = st.columns((5,1), gap="small")
+            original_rows = data.shape[0]
+            original_cols = data.shape[1]
+            
+            #with csv_orig_row:
+            st.sidebar.markdown(f"<span style='color: blue ;'>Original number of rows : </span> <span style='color: black;'>{original_rows}</span>", unsafe_allow_html=True)
+            #with csv_orig_col:
+            st.sidebar.markdown(f"<span style='color: blue;'>Original number of columns : </span> <span style='color: black;'>{original_cols}</span>", unsafe_allow_html=True)
+            
+            colored_header(
+                label="",
+                description="",
+                color_name="violet-70",
+            )  
+
+            st.subheader("[👁️‍🗨️] Table Preview:")
             st.write("\n")
             if data.shape[0] == 0:
                 st.warning("The selected file does not contain any data or all rows with blank / alike will be automatically removed.")
             else:
-                csv_orig_row, csv_orig_col = st.columns((1,4), gap="small")
-                with csv_orig_row:
-                    st.write(f"Original number of rows :{data.shape[0]:.0f}")
-                with csv_orig_col:
-                    st.write(f"Original number of columns :{data.shape[1]:.0f}")
-                    
-                data = data.dropna() 
+                #data = data.dropna()
                 st.dataframe(data)
+                #ag_grid = AgGrid(data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
+                #ag_grid = AgGrid(
+                #    data, 
+                #    height=300, 
+                #    width='100%',
+                #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
+                #    update_mode=GridUpdateMode.FILTERING_CHANGED,
+                #    fit_columns_on_grid_load=True,
+                #    allow_unsafe_jscode=True, 
+                #    )
                 
-                csv_drop_row, csv_drop_col = st.columns((1,4), gap="small")
+                space, csv_drop_row, csv_drop_col = st.columns((5,1,1), gap="small")
+                drop_rows = data.shape[0]
+                drop_cols = data.shape[1]
+                #st.write("Record count after dropping records with N/A or blank records ▶")
                 with csv_drop_row:
-                    st.write(f"Currnet number of rows :{data.shape[0]:.0f}")
+                    st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{drop_rows}</span>", unsafe_allow_html=True)
                 with csv_drop_col:
-                    st.write(f"Currnet number of columns :{data.shape[1]:.0f}")
-                
-            st.write("\n")
+                    st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{drop_cols}</span>", unsafe_allow_html=True)
             
         except MemoryError:
             st.write("Mem Error")
             error_caught = True
             fixed_data = fix_dataframe(data)
             fixed_data = fixed_data.dropna() 
-            st.dataframe(fixed_data)
-            csv_fix_row, csv_fix_col = st.columns((1,4), gap="small")
+            st.dataframe(fixed_data)           
+            #ag_grid = AgGrid(fixed_data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
+            #ag_grid = AgGrid(
+            #    fixed_data, 
+            #    height=300, 
+            #    width='100%',
+            #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
+            #    update_mode=GridUpdateMode.FILTERING_CHANGED,
+            #    fit_columns_on_grid_load=True,
+            #    allow_unsafe_jscode=True,
+            #    )
+            space,csv_fix_row, csv_fix_col = st.columns((5,1,1), gap="small")
+            fxd_rows = data.shape[0]
+            fxd_cols = data.shape[1]
+            #st.write("Count after dropping records with N/A or blank records:")
             with csv_fix_row:
-                st.write(f"Currnet number of rows :{data.shape[0]:.0f}")
+                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{fxd_rows}</span>", unsafe_allow_html=True)
             with csv_fix_col:
-                st.write(f"Currnet number of columns :{data.shape[1]:.0f}")
+                st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{fxd_cols}</span>", unsafe_allow_html=True)
         
     elif file_name.endswith(".xlsx"):
-        xlsx_file = pd.read_excel(file, sheet_name=None, na_values=["*","**","", "NA", "N/A","-"])
+        #xlsx_file = pd.read_excel(file, sheet_name=None, na_values=["*","**","", "NA", "N/A","-"])
+        xlsx_file = pd.read_excel(file, sheet_name=None)
         sheet_names = list(xlsx_file.keys())
-        
-        selected_sheet = st.selectbox("➕ Select a sheet:", sheet_names)
+        st.sidebar.markdown("""---""")
+        selected_sheet = st.sidebar.selectbox("➕ SELECT A SHEET", sheet_names)
         
         try:
-            data = pd.read_excel(file, sheet_name=selected_sheet, na_values=["*","**","", "NA", "N/A","-"]) 
-            st.write("👁️‍🗨️ Data Preview:")
+            data = pd.read_excel(file, sheet_name=selected_sheet)
+            #xl_orig_row, xl_orig_col = st.columns((1,4), gap="small")
+            original_rows = data.shape[0]
+            original_cols = data.shape[1]
+            #with xl_orig_row:
+            st.sidebar.markdown(f"<span style='color: blue;'>Original number of rows : </span> <span style='color: black;'>{original_rows}</span>", unsafe_allow_html=True)
+            #with xl_orig_col:
+            st.sidebar.markdown(f"<span style='color: blue;'>Original number of columns : </span> <span style='color: black;'>{original_cols}</span>", unsafe_allow_html=True)
+            colored_header(
+                label="",
+                description="",
+                color_name="violet-70",
+            )              
+            st.subheader("[👁️‍🗨️] Table Preview:")
             st.write("\n")
             if data.shape[0] == 0:
                 st.warning("The selected file does not contain any data or all rows with blank / alike will be automatically removed.")
-            else:
-                xl_orig_row, xl_orig_col = st.columns((1,4), gap="small")
-                with xl_orig_row:
-                    st.write(f"Original number of rows :{data.shape[0]:.0f}")
-                with xl_orig_col:
-                    st.write(f"Original number of columns :{data.shape[1]:.0f}")
-                    
-                data = data.dropna() 
+            else:   
+                #data = data.dropna() 
                 st.dataframe(data)
-                
-                xl_drop_row, xl_drop_col = st.columns((1,4), gap="small")
+                #ag_grid = AgGrid(data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
+                #ag_grid = AgGrid(
+                #    data, 
+                #    height=300, 
+                #    width='100%',
+                #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
+                #    update_mode=GridUpdateMode.FILTERING_CHANGED,
+                #    fit_columns_on_grid_load=True,
+                #    allow_unsafe_jscode=True, 
+                #    )
+
+                button, xl_drop_row, xl_drop_col = st.columns((5,1,1), gap="small")
+                xldrop_rows = data.shape[0]
+                xldrop_cols = data.shape[1]
+                #st.write("Count after dropping records with N/A or blank records:")
                 with xl_drop_row:
-                    st.write(f"Current number of rows :{data.shape[0]:.0f}")
+                    st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows}</span>", unsafe_allow_html=True)
                 with xl_drop_col:
-                    st.write(f"Current number of columns :{data.shape[1]:.0f}")
+                    st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{xldrop_cols}</span>", unsafe_allow_html=True)
                     
             st.write("\n")
         
@@ -105,15 +165,38 @@ if file is not None:
             fixed_data = fix_dataframe(data)
             fixed_data = fixed_data.dropna() 
             st.dataframe(fixed_data)
-            xl_fix_row, xl_fix_col = st.columns((1,4), gap="small")
+            #ag_grid = AgGrid(fixed_data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
+            #ag_grid = AgGrid(
+            #    fixed_data, 
+            #    height=300, 
+            #    width='100%',
+            #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
+            #    update_mode=GridUpdateMode.FILTERING_CHANGED,
+            #    fit_columns_on_grid_load=True,
+            #    allow_unsafe_jscode=True, #Set it to True to allow jsfunction to be injected
+            #    )    
+            button, xl_fix_row, xl_fix_col = st.columns((5,1,1), gap="small")
+            xlfix_rows = data.shape[0]
+            xlfix_cols = data.shape[1]
+            #st.write("Count after dropping records with N/A or blank records:")
             with xl_fix_row:
-                st.write(f"Current number of rows :{data.shape[0]:.0f}")
+                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xlfix_rows}</span>", unsafe_allow_html=True)
             with xl_fix_col:
-                st.write(f"Current number of columns :{data.shape[1]:.0f}")
-
+                st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{xlfix_cols}</span>", unsafe_allow_html=True)
+                
     if error_caught:
         #st.warning("There was not enough memory to process the data. Please try again with a smaller dataset.")
         st.dataframe(data)
+        #ag_grid = AgGrid(data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
+        #ag_grid = AgGrid(
+        #    data, 
+        #    height=300, 
+        #    width='100%',
+        #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
+        #    update_mode=GridUpdateMode.FILTERING_CHANGED,
+        #    fit_columns_on_grid_load=True,
+        #    allow_unsafe_jscode=True, #Set it to True to allow jsfunction to be injected
+        #    ) 
         
         @st.experimental_memo
         def is_ordinal(data):
@@ -138,15 +221,31 @@ if file is not None:
                         levels[i] = "Ordinal"
                     else:
                         levels[i] = "Nominal"
+
+        continuous_count = 0
+        discrete_count = 0
+        binary_count = 0
+        nominal_count = 0
+        ordinal_count = 0
+
+        for level in levels:
+            if level == "Continuous":
+                continuous_count += 1
+            elif level == "Discrete":
+                discrete_count += 1
+            elif level == "Binary":
+                binary_count += 1
+            elif level == "Nominal":
+                nominal_count += 1
+            elif level == "Ordinal":
+                ordinal_count += 1
+
         isNumerical = []
         for columndata in data.columns:
             if data[columndata].dtype == np.int64 or data[columndata].dtype == np.float64:
                 isNumerical.append("Quantitative")
             else:
                 isNumerical.append("Categorical")
-                
-        column_numerical = [f"{columndata}: {isNumerical}" for columndata, isNumerical in zip(data.columns, isNumerical)]
-        column_options = [f"{col}: {level}" for col, level in zip(data.columns, levels)]
 
         recommendations = {}
         for i, level in enumerate(levels):
@@ -163,28 +262,40 @@ if file is not None:
             else:
                 recommendations[data.columns[i]] = ["NO RECOMMENDATION"]
 
-        st.sidebar.markdown("<i>RECOMMENDATIONS PER COLUMN:</i>", unsafe_allow_html=True)
-        for column, tests in recommendations.items():
-            tbl_column = f"<font style='font-size:15pt;font-family:Courier;color:purple' unsafe_allow_html=True><b>- {column}:</b></font>"
-            tbl_test = f"<font style='font-size:10pt;font-family:Courier;color:#00a67d'><b>{', '.join(tests)}</b></font>" 
-            st.sidebar.markdown(tbl_column + tbl_test, unsafe_allow_html=True)
+        anova_count = 0
+        single_linear_regression_count = 0
+        logistic_regression_count = 0
+        chi_square_count = 0
+
+        for tests in recommendations.values():
+            for test in tests:
+                if test == "ANOVA":
+                    anova_count += 1
+                elif test == "SINGLE LINEAR REGRESSION":
+                    single_linear_regression_count += 1
+                elif test == "LOGISTIC REGRESSION":
+                    logistic_regression_count += 1
+                elif test == "CHI-SQUARE TEST":
+                    chi_square_count += 1
 
         if data.empty:
             st.write("")
         else:
-            column = st.selectbox("➕ Choose a column:", list(recommendations.keys()))
-            col1, col2, col3 = st.columns(3)
-            if not column:
-                st.write("No column selected")
-            with col1:
-                st.write(f"🔽 Levels of Measurements per column :", column_options, key=f"test-{column}")
-            with col2:    
-                st.write(f"🔽 Variable column type:", column_numerical, key=f"test-{column}")
-            with col3:
-                st.write(f"🔽 Test suggestion for column {column}:", recommendations[column], key=f"test-{column}")
+            column_numerical = [f"{columndata}: {isNumerical}" for columndata, isNumerical in zip(data.columns, isNumerical)]
+            column_options = [f"{col}: {level}" for col, level in zip(data.columns, levels)]
             
-            test = st.selectbox("➕ Choose a test:", recommendations[column])
+            tab1, tab2, tab3, tab4, tab5, tab6  = st.tabs(["🔽  CURRENT COLUMN TEST SUGGESTIONS  |","🔽  LEVELS OF MEASUREMENTS COUNT  |","🔽  TEST SUGGESTIONS COUNT  |", "🔽  LEVELS OF MEASUREMENTS  |", "🔽  VARIABLE COLUMN TYPE  |","🔽  ALL COLUMNSS TEST SUGGESTIONS  |"])
             
+            colored_header(
+                label="",
+                description="",
+                color_name="violet-70",
+            )   
+            st.sidebar.markdown("""---""")
+            column = st.sidebar.selectbox("➕ SELECT A COLUMN:", list(recommendations.keys()))
+            st.write("\n")
+            test = st.sidebar.selectbox("➕ SELECT A TEST:", recommendations[column])
+
             if test == "SINGLE LINEAR REGRESSION":
                 linear_regression_test.linear_regression(data,file)
             elif test == "T-TEST (PAIRED)":
@@ -192,10 +303,32 @@ if file is not None:
             elif test == "ANOVA":
                 anova_test.anova(data,file)
             elif test == "CHI-SQUARE TEST":
-                chi_square_test.chi_square_fixed(fixed_data,col1,col2)
+                chi_square_test.chi_square(data,file)
             elif test == "LOGISTIC REGRESSION":
                 logistic_regression_test.logistic_regression(data,file)
-        
+            else:
+                st.write("Invalid test selected")
+
+            if not column:
+                st.write("No column selected")
+            with tab1:
+                for i, test in enumerate(recommendations[column], start=1):
+                    st.write(f"{i}. <font color='blue'>{column}</font>: {test}", unsafe_allow_html=True)
+            with tab4:
+                for i, option in enumerate(column_options, start=1):
+                    st.write(f"{i}. <font color='blue'>{option.split(':')[0]}</font>: {option.split(':')[1]}", unsafe_allow_html=True)
+            with tab5:
+                for i, numerical in enumerate(column_numerical, start=1):
+                    st.write(f"{i}. <font color='blue'>{numerical.split(':')[0]}</font>: {numerical.split(':')[1]}", unsafe_allow_html=True)
+            with tab6:
+                for index, (column, tests) in enumerate(recommendations.items(), start=1):
+                    st.write(f"{index}. <font color='blue'>{column}</font>: {', '.join(tests)}", unsafe_allow_html=True)
+            with tab2:
+                for i, (name, count) in enumerate(zip(["CONTINUOUS", "DISCRETE", "BINARY", "NOMINAL", "ORDINAL"], [continuous_count, discrete_count, binary_count, nominal_count, ordinal_count]), start=1):
+                    st.write(f"{i}. <font color='blue'>{name}:</font> {count}", unsafe_allow_html=True)
+            with tab3:
+                for i, (test_name, count) in enumerate(zip(['ANOVA', 'SINGLE LINEAR REGRESSION', 'LOGISTIC REGRESSION', 'CHI-SQUARE TEST'], [anova_count, single_linear_regression_count, logistic_regression_count, chi_square_count]), start=1):
+                    st.write(f"{i}. <font color='blue'>{test_name}:</font> {count}", unsafe_allow_html=True)
     else:
         @st.experimental_memo
         def is_ordinal(fixed_data):
@@ -220,15 +353,31 @@ if file is not None:
                         levels[i] = "Ordinal"
                     else:
                         levels[i] = "Nominal"
+
+        continuous_count = 0
+        discrete_count = 0
+        binary_count = 0
+        nominal_count = 0
+        ordinal_count = 0
+
+        for level in levels:
+            if level == "Continuous":
+                continuous_count += 1
+            elif level == "Discrete":
+                discrete_count += 1
+            elif level == "Binary":
+                binary_count += 1
+            elif level == "Nominal":
+                nominal_count += 1
+            elif level == "Ordinal":
+                ordinal_count += 1
+
         isNumerical = []
         for columndata in data.columns:
             if data[columndata].dtype == np.int64 or data[columndata].dtype == np.float64:
                 isNumerical.append("Quantitative")
             else:
                 isNumerical.append("Categorical")
-                
-        column_numerical = [f"{columndata}: {isNumerical}" for columndata, isNumerical in zip(data.columns, isNumerical)]
-        column_options = [f"{col}: {level}" for col, level in zip(data.columns, levels)]
 
         recommendations = {}
         for i, level in enumerate(levels):
@@ -245,28 +394,41 @@ if file is not None:
             else:
                 recommendations[data.columns[i]] = ["NO RECOMMENDATION"]
 
-        st.sidebar.markdown("<i>RECOMMENDATIONS PER COLUMN:</i>", unsafe_allow_html=True)
-        for column, tests in recommendations.items():
-            tbl_column = f"<font style='font-size:15pt;font-family:Courier;color:purple' unsafe_allow_html=True><b>- {column}:</b></font>"
-            tbl_test = f"<font style='font-size:10pt;font-family:Courier;color:#00a67d'><b>{', '.join(tests)}</b></font>" 
-            st.sidebar.markdown(tbl_column + tbl_test, unsafe_allow_html=True)
+        anova_count = 0
+        single_linear_regression_count = 0
+        logistic_regression_count = 0
+        chi_square_count = 0
+
+        for tests in recommendations.values():
+            for test in tests:
+                if test == "ANOVA":
+                    anova_count += 1
+                elif test == "SINGLE LINEAR REGRESSION":
+                    single_linear_regression_count += 1
+                elif test == "LOGISTIC REGRESSION":
+                    logistic_regression_count += 1
+                elif test == "CHI-SQUARE TEST":
+                    chi_square_count += 1
 
         if data.empty:
             st.write("")
         else:
-            column = st.selectbox("➕ Choose a column:", list(recommendations.keys()))
-            col1, col2, col3 = st.columns(3)
-            if not column:
-                st.write("No column selected")
-            with col1:
-                st.write(f"🔽 Levels of Measurements per column :", column_options, key=f"test-{column}")
-            with col2:    
-                st.write(f"🔽 Variable column type:", column_numerical, key=f"test-{column}")
-            with col3:
-                st.write(f"🔽 Test suggestion for column {column}:", recommendations[column], key=f"test-{column}")
+            column_numerical = [f"{columndata}: {isNumerical}" for columndata, isNumerical in zip(data.columns, isNumerical)]
+            column_options = [f"{col}: {level}" for col, level in zip(data.columns, levels)]
             
-            test = st.selectbox("➕ Choose a test:", recommendations[column])
+            tab1, tab2, tab3, tab4, tab5, tab6  = st.tabs(["🔽  CURRENT COLUMN TEST SUGGESTIONS  |","🔽  LEVELS OF MEASUREMENTS COUNT  |","🔽  TEST SUGGESTIONS COUNT  |", "🔽  LEVELS OF MEASUREMENTS  |", "🔽  VARIABLE COLUMN TYPE  |","🔽  ALL COLUMNSS TEST SUGGESTIONS  |"])
+
             
+            colored_header(
+                label="",
+                description="",
+                color_name="violet-70",
+            )   
+            st.sidebar.markdown("""---""")
+            column = st.sidebar.selectbox("➕ SELECT A COLUMN", list(recommendations.keys()))
+            st.sidebar.write("\n")
+            test = st.sidebar.selectbox("➕ SELECT A TEST", recommendations[column])
+
             if test == "SINGLE LINEAR REGRESSION":
                 linear_regression_test.linear_regression(data,file)
             elif test == "T-TEST (PAIRED)":
@@ -274,7 +436,29 @@ if file is not None:
             elif test == "ANOVA":
                 anova_test.anova(data,file)
             elif test == "CHI-SQUARE TEST":
-                chi_square_test.chi_square(data,col1,col2)
+                chi_square_test.chi_square(data,file)
             elif test == "LOGISTIC REGRESSION":
                 logistic_regression_test.logistic_regression(data,file)
-            
+            else:
+                st.write("Invalid test selected")
+
+            if not column:
+                st.write("No column selected")
+            with tab1:
+                for i, test in enumerate(recommendations[column], start=1):
+                    st.write(f"{i}. <font color='blue'>{column}</font>: {test}", unsafe_allow_html=True)
+            with tab4:
+                for i, option in enumerate(column_options, start=1):
+                    st.write(f"{i}. <font color='blue'>{option.split(':')[0]}</font>: {option.split(':')[1]}", unsafe_allow_html=True)
+            with tab5:
+                for i, numerical in enumerate(column_numerical, start=1):
+                    st.write(f"{i}. <font color='blue'>{numerical.split(':')[0]}</font>: {numerical.split(':')[1]}", unsafe_allow_html=True)
+            with tab6:
+                for index, (column, tests) in enumerate(recommendations.items(), start=1):
+                    st.write(f"{index}. <font color='blue'>{column}</font>: {', '.join(tests)}", unsafe_allow_html=True)
+            with tab2:
+                for i, (name, count) in enumerate(zip(["CONTINUOUS", "DISCRETE", "BINARY", "NOMINAL", "ORDINAL"], [continuous_count, discrete_count, binary_count, nominal_count, ordinal_count]), start=1):
+                    st.write(f"{i}. <font color='blue'>{name}:</font> {count}", unsafe_allow_html=True)
+            with tab3:
+                for i, (test_name, count) in enumerate(zip(['ANOVA', 'SINGLE LINEAR REGRESSION', 'LOGISTIC REGRESSION', 'CHI-SQUARE TEST'], [anova_count, single_linear_regression_count, logistic_regression_count, chi_square_count]), start=1):
+                    st.write(f"{i}. <font color='blue'>{test_name}:</font> {count}", unsafe_allow_html=True)
