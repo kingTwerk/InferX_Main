@@ -2,75 +2,155 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-
+from streamlit_extras.colored_header import colored_header
 from scipy.stats import f_oneway
+from scipy.stats import f
+#from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
+import os
+import datetime
+import math
+
 
 def anova(data, file):
         # Select only numeric columns
         data = data.select_dtypes(include=['object','float','int'])
         st.set_option('deprecation.showPyplotGlobalUse', False)
-        st.subheader('📝 Analysis of variance (ANOVA)')
-
+        st.header('Analysis of variance (ANOVA)')
+        st.write("\n")
+        st.subheader("[👁️‍🗨️] Table Preview:")
         st.dataframe(data)
-        st.write(f"Number of rows :{data.shape[0]:.0f}")
-        st.write(f"Number of columns :{data.shape[1]:.0f}")    
+        #ag_grid = AgGrid(
+        #data,
+        #key='unique_key_1',
+        #height=300, 
+        #width='100%',
+        #data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
+        #update_mode=GridUpdateMode.FILTERING_CHANGED,
+        #fit_columns_on_grid_load=True
+        ##allow_unsafe_jscode=True, #Set it to True to allow jsfunction to be injected
+        #)
+
+        button,anova_row, anova_col = st.columns((5,1,1), gap="small")
+        rows = data.shape[0]
+        cols = data.shape[1]
+        with anova_row:
+            st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
+        with anova_col:
+            st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
+
+        with button:
+            if st.button("Download CSV"):
+                # Select only numeric columns
+                #ag_grid = data.select_dtypes(include=['float'])
+                data = data.select_dtypes(include=['object','float','int'])
+                # Get current date
+                now = datetime.datetime.now()
+                date_string = now.strftime("%Y-%m-%d")
+                # Set default save location to desktop
+                desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
+                save_path = os.path.join(desktop, f'anova_filtered_data_csv_{date_string}.csv')
+                # write data to the selected file
+                data.to_csv(save_path, index=False)
+                st.success(f'File saved successfully to {save_path}!')
+
+        colored_header(
+        label="",
+        description="",
+        color_name="violet-70",
+        )  
+
+        #st.write(f"Number of rows :{data.shape[0]:.0f}")
+        #st.write(f"Number of columns :{data.shape[1]:.0f}")    
         # Create an ag-Grid table using the AgGrid component
         #ag_grid = AgGrid(data, height=300)
-        
+        st.write("\n")
         column_names = data.columns.tolist()
         # Ask the user to select the column names for the independent and dependent variables
-        independent_column_name = st.selectbox('➕ Select the column name for the X (independent/CATEGORICAL/DISCRETE) variable:', column_names)
+        independent_column_name = st.selectbox('➕ Select the column name for the X (independent/DISCRETE) variable:', column_names)
+        st.write("\n")
         dependent_column_name = st.selectbox('➕ Select the column name for the y (dependent/CONTINUOUS) variable:', column_names)
-
+        st.write("\n")
         # Check if the selected columns are the same
         if independent_column_name == dependent_column_name:
             st.error("❌ Both columns are the same. Please select different columns.")
         else:           
             try:
-                if ((not pd.api.types.is_string_dtype(data[independent_column_name]) and not pd.api.types.is_integer_dtype(data[independent_column_name])) and data[independent_column_name].nunique() < 2):
-                    st.error(f'❌ {independent_column_name} column must be either categorical/discrete data with atleast 2 unique values.')
+                if ((not pd.api.types.is_integer_dtype(data[independent_column_name])) and data[independent_column_name].nunique() < 2):
+                    st.error(f'❌ {independent_column_name} column must be either discrete data with atleast 2 unique values.')
                 
                 elif (not pd.api.types.is_float_dtype(data[dependent_column_name]) and not np.issubdtype(data[dependent_column_name], np.number)):
                     st.error(f'❌ {dependent_column_name} column must be a continuous variable.') 
                 
-                elif (pd.api.types.is_float_dtype(data[independent_column_name]) and np.issubdtype(data[independent_column_name], np.number)):
-                    st.error(f'❌ {independent_column_name} column must be either categorical/discrete data with atleast 2 unique values.')
+                elif (pd.api.types.is_string_dtype(data[independent_column_name]) and pd.api.types.is_float_dtype(data[independent_column_name]) and np.issubdtype(data[independent_column_name], np.number)):
+                    st.error(f'❌ {independent_column_name} column must be either discrete data with atleast 2 unique values.')
                 
                 elif ((pd.api.types.is_string_dtype(data[dependent_column_name]) or pd.api.types.is_integer_dtype(data[dependent_column_name])) or not data[independent_column_name].nunique() > 1):
                     st.error(f'❌ {dependent_column_name} column must be a continuous variable.') 
                 
                 else:
                     # Perform the ANOVA test
-                    st.subheader("✎ [ANOVA Test]")
-                    result = f_oneway(*[group[1][dependent_column_name] for group in data.groupby(independent_column_name)])
-
+                    #st.write("\n")
+                    colored_header(
+                        label="",
+                        description="",
+                        color_name="violet-70",
+                        )          
+                    st.subheader("[✍] ANOVA Test")
+                    
+                    ind_col_data = data[independent_column_name].values
+                    dep_col_data = data[dependent_column_name].values
+                    result = f_oneway(ind_col_data, dep_col_data)
+                    #st.write("F-value: ", result.statistic)
+                    #st.write("p-value: {:.30f}".format(result.pvalue))
+                    #st.metric("p-value", "{:.30f}".format(result.pvalue))
+                                                     
+            
                     # Extract the F-value and p-value from the result
                     f_value = result.statistic
                     # Extract the p-value from the result
                     p_value = result.pvalue
-                    
-                    #st.write(f'F-value (F-ratio):', f_value)
-                    #st.write(f'F-value (F-ratio): {f_value:.2f}')
-                    st.metric("F-value (F-ratio):",f"{f_value:.2f}")
+
+                    alpha = 0.05
+                    # Determine the number of groups in your analysis
+                    k = len(data[independent_column_name].unique())
+                    dfn = k-1
+
+                    # Determine the total number of observations in all the groups
+                    n = len(data)
+                    dfd = n-k
+                    c_value = f.ppf(1-alpha, dfn, dfd)
+
+
                     if f_value == float('inf'):
                         st.success(f'* The F-value is not defined because one of the groups has a variance of 0 or the groups have a very large difference in sample size.')
                         st.error(f'* The ANOVA test is not appropriate to use and other statistical tests should be considered.')
                     else:
+                        st.write("\n")
+                        value_a, value_b = st.columns((1,5), gap="small")                        
+                        with value_a:
+                            st.metric("F-stat:",f"{f_value:.2f}")
+                            st.metric("Critical-value:",f"{c_value:.2f}")
+                        with value_b:
+                            if f_value > c_value:
+                                st.success("The calculated F ratio is greater than the critical value, the null hypothesis is rejected, and the result is considered statistically significant. This means that there is a significant difference between the means of the groups.")
+                            else:
+                                st.error("The calculated F ratio is not greater than the critical value, the null hypothesis is not rejected, and the result is not considered statistically significant. This means that there is no significant difference between the means of the groups.")
+                        
+                        value_2a, value_2b = st.columns((1,5), gap="small")   
                         #st.write(f'P-value (significance level):', p_value) 
-                        # convert p_value to percentage
                         #st.write(f'P-value (significance level): {p_value:.2e}')
-                        st.metric("P-value (significance level):",f"{p_value:.2f}")
-                        if p_value < 0.05:
-                            st.success(f'* The result is statistically significant, which means that there is a less than 0.05 chance that the observed difference between the {dependent_column_name} of the different {independent_column_name} groups occurred by chance alone.')
-                            st.success(f'* The F-value is large, which indicates that there is a significant difference between the {dependent_column_name} of the different {independent_column_name} groups.')
-                            st.success(f'* This suggests that the {independent_column_name} has a significant effect on the {dependent_column_name}.')
-                        else:
-                            st.error(f'* The result is not statistically significant, which means that there is a greater than or equal to 0.05 chance that the observed difference between the {dependent_column_name} of the different {independent_column_name} groups occurred by chance alone.')
-                            st.error(f'* The F-value is small, which indicates that there is not a significant difference between the {dependent_column_name} of the different {independent_column_name} groups.')
-                            st.error(f'* This suggests that the {independent_column_name} has no significant effect on the {dependent_column_name}.')
+                        with value_2a:
+                            st.metric("P-value (significance level):",f"{p_value:.2f}")
+                        with value_2b:
+                            if p_value < 0.05:
+                                st.success(f'* The result is statistically significant, which means that there is a less than 0.05 chance that the observed difference between the {dependent_column_name} of the different {independent_column_name} groups occurred by chance alone.')
+                                st.success(f'* The F-value is large, which indicates that there is a significant difference between the {dependent_column_name} of the different {independent_column_name} groups.')
+                                st.success(f'* This suggests that the {independent_column_name} has a significant effect on the {dependent_column_name}.')
+                            else:
+                                st.error(f'* The result is not statistically significant, which means that there is a greater than or equal to 0.05 chance that the observed difference between the {dependent_column_name} of the different {independent_column_name} groups occurred by chance alone.')
+                                st.error(f'* The F-value is small, which indicates that there is not a significant difference between the {dependent_column_name} of the different {independent_column_name} groups.')
+                                st.error(f'* This suggests that the {independent_column_name} has no significant effect on the {dependent_column_name}.')
 
-                        st.subheader("🗠[Graph]")
-                        # Select the data for the box plot
                         x = data[independent_column_name]
                         y = data[dependent_column_name]
 
@@ -79,7 +159,7 @@ def anova(data, file):
 
                         # Create a data object with the trace
                         dataBox = [traceBox]
-                        st.write(f'➕ Box Plot: {dependent_column_name} (outcome/dependent/output) ')
+                        
                         # Create a box plot using plotly
                         
                         # Calculate the summary statistics for the data
@@ -89,15 +169,45 @@ def anova(data, file):
                         meanY = summary_statsY['mean']
                         medianY = summary_statsY['50%']
                         stdY = summary_statsY['std']
+                        modeY = data[dependent_column_name].mode()  # This will return the mode of the dependent_column_name
                         
-                        # Print the summary statistics for Y
+                        #st.write("Summary Statistics for Y:")
                         #st.write(f'Mean:', meanY) # st.write(f"The mean of the data is {mean:.3f}.")
-                        st.write(f'Mean: {meanY:.2f}')
-                        #write(f'Median:', medianY) # st.write(f"The median of the data is {median:.3f}.")
-                        st.write(f'Median: {medianY:.2f}')
+                        st.write("\n")
+                        st.subheader("[📝] Descriptive Statistics for Y")
+                        st.write("\n")
+                        mean1a, mean2a = st.columns((1,5), gap="small")
+                        with mean1a:                    
+                            st.metric("Mean:",f"{meanY:.2f}")
+                        with mean2a:
+                            st.info("* The mean is the average of all the values in the data set. It is calculated by adding up all the values and then dividing by the total number of values.")
+                        #write(f'Median:', medianY) # st.write(f"The median of the data is {median:.3f}.")                        
+                        
+                        median1a, median2a = st.columns((1,5), gap="small")
+                        with median1a:
+                            st.metric("Median:",f"{medianY:.2f}")
+                        with median2a:    
+                            st.info("* The median is the middle value when the data is arranged in order. It is the value that separates the data into two equal halves.")
+                        
+                        mode1a, mode2a = st.columns((1,5), gap="small")
+                        if modeY.shape[0] == 0:
+                            st.warning("This data set doesn't have a mode.")
+                        else:
+                            for i in range(modeY.shape[0]):
+                                with mode1a:
+                                    st.metric("Modes:",f"{modeY[i]:.2f}")
+                                with mode2a:    
+                                    st.info("* The mode is the value that appears most frequently in the data set. A data (set can have one mode, more than one mode, or no mode at all.")
                         #st.write(f'Standard Devidation:', stdY) # st.write(f"The standard deviation of the data is {std:.3f}.")
-                        st.write(f'Standard Devidation: {stdY:.2f}')
+                        std1a, std2a = st.columns((1,5), gap="small")
+                        with std1a:
+                            st.metric("Standard Deviation:",f"{stdY:.2f}")
+                        with std2a:
+                            st.info("* The standard deviation is a measure of how spread out the values are from the mean. A low standard deviation indicates that the values tend to be close to the mean, while a high standard deviation indicates that the values are spread out over a wider range.")
 
+                        st.write("\n")
+                        st.subheader("[💡] Insight Statistics for Y")
+                        st.write("\n")   
                         # Analyze the results
                         if meanY > medianY:
                             st.info(f'* The mean is higher than the median, which suggests that the data is skewed to the right.')
@@ -107,10 +217,35 @@ def anova(data, file):
                             st.info(f'* The mean is equal to the median, which suggests that the data is symmetrical.')
 
                         if stdY > 1:
-                            st.info(f'* The standard deviation is high, which indicates that the data is dispersed.')
+                            st.warning(f'* The standard deviation is high (> 1), which indicates that the data is dispersed.')
                         else:
                             st.info(f'* The standard deviation is low, which indicates that the data is concentrated.')
-                                    
+                        if meanY > (3 * stdY):
+                            #st.warning(f'* The difference between the mean and median is greater than 3 times the standard deviation, which suggests that there are outliers in the data.')
+                            st.warning(f'* The difference between the mean is greater than 3 times the standard deviation, (Mean: {meanY:.2f}, UCL:{meanY + (3 * stdY):.2f}, LCL:{meanY - (3 * stdY):.2f}) which suggests that there are outliers in the data.')
+                        else:
+                            #st.info(f'* The difference between the mean and median is less than or equal to 3 times the standard deviation, which suggests that there are no significant outliers in the data.')
+                            st.info(f'* The difference between the mean is less than or equal to 3 times the standard deviation, (Mean: {meanY:.2f}, UCL:{meanY + (3 * stdY):.2f}, LCL:{meanY - (3 * stdY):.2f}), which suggests that there are no significant outliers in the data.')
+                        if p_value <= 0.05:
+                            result = "Reject Null Hypothesis"
+                            conclusion = "{} is a factor on {}.".format(independent_column_name, dependent_column_name)
+                            st.info("* P Value is {:.2f} which is less than or equal to 0.05 ({}); {}".format(p_value, result, conclusion))
+                        else:
+                            result = "Fail to Reject Null Hypothesis"
+                            conclusion = "{} is not a factor on {}.".format(independent_column_name, dependent_column_name)
+                            st.warning("* P Value is {:.2f} which is greater than to 0.05 ({}); {}".format(p_value, result, conclusion))
+
+                        
+                        
+                        st.write("\n")
+                        colored_header(
+                        label="",
+                        description="",
+                        color_name="violet-70",
+                        )          
+                        st.subheader("[📉] Graph")
+                        #st.write(f'➕ Box Plot: {dependent_column_name} (outcome/dependent/output) ')
+                        # Select the data for the box plot
                         fig = go.Figure()
                         fig.add_trace(go.Box(
                             y=y,
@@ -247,32 +382,3 @@ def anova(data, file):
 
             except AttributeError:
                     st.error(f'❌ [{dependent_column_name}] is categorical/discrete with at least 2 unique values and [{independent_column_name}] is continuous.')  
-
-    # The F-value is also known as the F-statistic or F-ratio. It is a measure of the variability between group means relative to the variability within each group.
-    # The p-value is the probability of obtaining a result as extreme as the observed result, assuming that the null hypothesis is true. It is used to determine the 
-    # statistical significance of the results of a hypothesis test.
-
-    # ANOVA (analysis of variance) is a statistical test that is used to compare the means of two or more groups. It can be used with continuous variables as well 
-    # as categorical variables. 
-
-    # If the independent variable is a continuous variable, ANOVA can be used to test whether there is a significant difference in the mean of the dependent variable
-    # among the different levels of the independent variable.
-
-    # If the independent variable is a categorical variable with two or more categories, ANOVA can be used to test whether there is a significant difference in the 
-    # mean of the dependent variable among the different categories.
-
-    # A dependent variable: This is the variable that is being measured or observed in the study. The dependent variable should be continuous (e.g., height, weight, 
-    # income).
-
-    # An independent variable: This is the variable that is being manipulated or controlled in the study. The independent variable should be categorical (e.g., 
-    # gender, treatment group).
-
-    # Multiple groups: The independent variable should have at least two groups, and the dependent variable should be measured for each group. For example, if the 
-    # independent variable is gender (male vs. female), then the dependent variable (e.g., height) would be measured for both males and females.
-
-    #For example, suppose you are interested in studying the effect of different teaching methods on students' test scores. The independent variable is the teaching 
-    #method (with three categories: "lecture-based", "project-based", and "flipped classroom"), and the dependent variable is the test score. In this case, you can
-    #use ANOVA to test whether there is a significant difference in the mean test scores among the three teaching methods.
-    #In general, ANOVA is a useful tool for comparing the means of different groups and determining whether the differences are statistically significant.
-    #However, it is important to note that ANOVA only tests for differences in means, and it does not provide information about the direction or size of the
-    # differences.
