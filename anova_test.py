@@ -11,23 +11,13 @@ import math
 
 
 def anova(data, file):
-        # Select only numeric columns
+    
         data = data.select_dtypes(include=['object','float','int'])
         st.set_option('deprecation.showPyplotGlobalUse', False)
         st.header('Analysis of variance (ANOVA)')
         st.write("\n")
         st.subheader("[👁️‍🗨️] Table Preview:")
         st.dataframe(data)
-        #ag_grid = AgGrid(
-        #data,
-        #key='unique_key_1',
-        #height=300, 
-        #width='100%',
-        #data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
-        #update_mode=GridUpdateMode.FILTERING_CHANGED,
-        #fit_columns_on_grid_load=True
-        ##allow_unsafe_jscode=True, #Set it to True to allow jsfunction to be injected
-        #)
 
         anova_row, anova_col = st.columns((1,5), gap="small")
         rows = data.shape[0]
