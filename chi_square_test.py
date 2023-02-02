@@ -80,10 +80,10 @@ def chi_square_fixed(fixed_data, file):
                 st.write("\n")
                 chi_cola1, chi_colb2, = st.columns((1,5), gap="small")
                 with chi_cola1:
-                    #st.write(f'Chi-Square Score: {chi2_score_1:.2f}',  prefix="\t")
+                
                     st.metric("Chi-Square Score:",f"{chi2_score_1:.2f}")
                 with chi_cola1:
-                    #st.write(f'Critical Value: {critical_value_1:.2f}', prefix="\t")
+                   
                     st.metric("Critical Value:",f"{critical_value_1:.2f}")
                 with chi_colb2:            
                     if chi2_score_1 > critical_value_1:
