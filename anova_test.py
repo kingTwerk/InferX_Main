@@ -39,19 +39,6 @@ def anova(data, file):
             st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
 
         with button:
-            if st.button("Download CSV"):
-                # Select only numeric columns
-                #ag_grid = data.select_dtypes(include=['float'])
-                data = data.select_dtypes(include=['object','float','int'])
-                # Get current date
-                now = datetime.datetime.now()
-                date_string = now.strftime("%Y-%m-%d")
-                # Set default save location to desktop
-                desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
-                save_path = os.path.join(desktop, f'anova_filtered_data_csv_{date_string}.csv')
-                # write data to the selected file
-                data.to_csv(save_path, index=False)
-                st.success(f'File saved successfully to {save_path}!')
 
         colored_header(
         label="",
