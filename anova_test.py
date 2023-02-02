@@ -179,18 +179,29 @@ def anova(data, file):
                         else:
                             
                             st.info(f'* The difference between the mean is less than or equal to 3 times the standard deviation, (Mean: {meanY:.2f}, UCL:{meanY + (3 * stdY):.2f}, LCL:{meanY - (3 * stdY):.2f}), which suggests that there are no significant outliers in the data.')
+                        st.write("\n")
+                        st.subheader("[🧪] Hypothesis Testing")
                         if p_value <= 0.05:
                             result = "Reject Null Hypothesis"
-                            conclusion = "{} is a factor on {}.".format(independent_column_name, dependent_column_name)
+                            conclusion = "There is sufficient evidence to suggest that {} is a factor on {}.".format(independent_column_name, dependent_column_name)
                             st.info("* P Value is {:.2f} which is less than or equal to 0.05 ({}); {}".format(p_value, result, conclusion))
                         else:
                             result = "Fail to Reject Null Hypothesis"
-                            conclusion = "{} is not a factor on {}.".format(independent_column_name, dependent_column_name)
+                            conclusion = "There is not sufficient evidence to suggest that {} is a factor on {}.".format(independent_column_name, dependent_column_name)
                             st.warning("* P Value is {:.2f} which is greater than to 0.05 ({}); {}".format(p_value, result, conclusion))
 
-                        
-                        
+                        # Add null and alternate hypothesis statements
+                        null_hypothesis = "The independent variable {} has no effect on the dependent variable {}.".format(independent_column_name, dependent_column_name)
+                        alternate_hypothesis = "The independent variable {} has an effect on the dependent variable {}.".format(independent_column_name, dependent_column_name)
+                        st.write("\n\n")
+                        st.markdown(f"<span style='color: blue;'>Null Hypothesis (H0): </span> <span style='color: black;'>{null_hypothesis}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: blue;'>Null Hypothesis (H1): </span> <span style='color: black;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
+
+                        st.write("\n\n")
+                        st.write("If the p-value is less than or equal to 0.05, it means that the result is statistically significant and we reject the null hypothesis. This suggests that the independent variable has an effect on the dependent variable. On the other hand, if the p-value is greater than 0.05, it means that the result is not statistically significant and we fail to reject the null hypothesis. This suggests that the independent variable does not have an effect on the dependent variable.")
+
                         st.write("\n")
+
                         colored_header(
                         label="",
                         description="",
