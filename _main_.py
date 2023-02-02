@@ -5,7 +5,7 @@ import openpyxl
 from scipy.stats import chi2_contingency
 from scipy.stats import chi
 from streamlit_extras.colored_header import colored_header
-#from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
+
 import os
 import datetime
 
@@ -16,7 +16,6 @@ import logistic_regression_test
 
 st.set_page_config(page_title="INFER-X-sidebar", layout='wide', initial_sidebar_state='expanded', page_icon='👁️‍🗨️')
 
-#st.title("👨🏽‍💻 Inferential Statistical Tests Recommender [INFER-X]") 
 st.sidebar.title("⚙ INFER-X") 
 st.title("🖊️ Inferential Statistical Tests Recommender")
 
@@ -40,7 +39,6 @@ if file is not None:
 
     if file_name.endswith(".csv"):
         try:
-            #data = pd.read_csv(file, na_values=["*","**","", "NA", "N/A","-"])
             data = pd.read_csv(file) 
             #csv_orig_row, csv_orig_col = st.columns((5,1), gap="small")
             original_rows = data.shape[0]
@@ -62,23 +60,11 @@ if file is not None:
             if data.shape[0] == 0:
                 st.warning("The selected file does not contain any data or all rows with blank / alike will be automatically removed.")
             else:
-                #data = data.dropna()
                 st.dataframe(data)
-                #ag_grid = AgGrid(data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
-                #ag_grid = AgGrid(
-                #    data, 
-                #    height=300, 
-                #    width='100%',
-                #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
-                #    update_mode=GridUpdateMode.FILTERING_CHANGED,
-                #    fit_columns_on_grid_load=True,
-                #    allow_unsafe_jscode=True, 
-                #    )
-                
                 space, csv_drop_row, csv_drop_col = st.columns((5,1,1), gap="small")
                 drop_rows = data.shape[0]
                 drop_cols = data.shape[1]
-                #st.write("Record count after dropping records with N/A or blank records ▶")
+
                 with csv_drop_row:
                     st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{drop_rows}</span>", unsafe_allow_html=True)
                 with csv_drop_col:
@@ -90,16 +76,7 @@ if file is not None:
             fixed_data = fix_dataframe(data)
             fixed_data = fixed_data.dropna() 
             st.dataframe(fixed_data)           
-            #ag_grid = AgGrid(fixed_data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
-            #ag_grid = AgGrid(
-            #    fixed_data, 
-            #    height=300, 
-            #    width='100%',
-            #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
-            #    update_mode=GridUpdateMode.FILTERING_CHANGED,
-            #    fit_columns_on_grid_load=True,
-            #    allow_unsafe_jscode=True,
-            #    )
+
             space,csv_fix_row, csv_fix_col = st.columns((5,1,1), gap="small")
             fxd_rows = data.shape[0]
             fxd_cols = data.shape[1]
@@ -118,12 +95,12 @@ if file is not None:
         
         try:
             data = pd.read_excel(file, sheet_name=selected_sheet)
-            #xl_orig_row, xl_orig_col = st.columns((1,4), gap="small")
+       
             original_rows = data.shape[0]
             original_cols = data.shape[1]
-            #with xl_orig_row:
+          
             st.sidebar.markdown(f"<span style='color: blue;'>Original number of rows : </span> <span style='color: black;'>{original_rows}</span>", unsafe_allow_html=True)
-            #with xl_orig_col:
+         
             st.sidebar.markdown(f"<span style='color: blue;'>Original number of columns : </span> <span style='color: black;'>{original_cols}</span>", unsafe_allow_html=True)
             colored_header(
                 label="",
@@ -135,23 +112,13 @@ if file is not None:
             if data.shape[0] == 0:
                 st.warning("The selected file does not contain any data or all rows with blank / alike will be automatically removed.")
             else:   
-                #data = data.dropna() 
+                
                 st.dataframe(data)
-                #ag_grid = AgGrid(data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
-                #ag_grid = AgGrid(
-                #    data, 
-                #    height=300, 
-                #    width='100%',
-                #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
-                #    update_mode=GridUpdateMode.FILTERING_CHANGED,
-                #    fit_columns_on_grid_load=True,
-                #    allow_unsafe_jscode=True, 
-                #    )
 
-                button, xl_drop_row, xl_drop_col = st.columns((5,1,1), gap="small")
+                xl_drop_row, xl_drop_col = st.columns((1,5), gap="small")
                 xldrop_rows = data.shape[0]
                 xldrop_cols = data.shape[1]
-                #st.write("Count after dropping records with N/A or blank records:")
+     
                 with xl_drop_row:
                     st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows}</span>", unsafe_allow_html=True)
                 with xl_drop_col:
@@ -165,39 +132,20 @@ if file is not None:
             fixed_data = fix_dataframe(data)
             fixed_data = fixed_data.dropna() 
             st.dataframe(fixed_data)
-            #ag_grid = AgGrid(fixed_data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
-            #ag_grid = AgGrid(
-            #    fixed_data, 
-            #    height=300, 
-            #    width='100%',
-            #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
-            #    update_mode=GridUpdateMode.FILTERING_CHANGED,
-            #    fit_columns_on_grid_load=True,
-            #    allow_unsafe_jscode=True, #Set it to True to allow jsfunction to be injected
-            #    )    
+ 
             button, xl_fix_row, xl_fix_col = st.columns((5,1,1), gap="small")
             xlfix_rows = data.shape[0]
             xlfix_cols = data.shape[1]
-            #st.write("Count after dropping records with N/A or blank records:")
+
             with xl_fix_row:
                 st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xlfix_rows}</span>", unsafe_allow_html=True)
             with xl_fix_col:
                 st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{xlfix_cols}</span>", unsafe_allow_html=True)
                 
     if error_caught:
-        #st.warning("There was not enough memory to process the data. Please try again with a smaller dataset.")
+ 
         st.dataframe(data)
-        #ag_grid = AgGrid(data,height=300, use_column_headers=True, filters='agTextColumnFilter', filter_data_frame=True)
-        #ag_grid = AgGrid(
-        #    data, 
-        #    height=300, 
-        #    width='100%',
-        #    data_return_mode=DataReturnMode.FILTERED_AND_SORTED, 
-        #    update_mode=GridUpdateMode.FILTERING_CHANGED,
-        #    fit_columns_on_grid_load=True,
-        #    allow_unsafe_jscode=True, #Set it to True to allow jsfunction to be injected
-        #    ) 
-        
+
         @st.experimental_memo
         def is_ordinal(data):
             try:
