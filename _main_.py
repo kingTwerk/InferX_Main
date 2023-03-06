@@ -295,7 +295,7 @@ def main():
                 with tab2:
                     for i, (name, count) in enumerate(zip(["CONTINUOUS", "DISCRETE", "BINARY", "NOMINAL", "ORDINAL"], [continuous_count, discrete_count, binary_count, nominal_count, ordinal_count]), start=1):
                         st.write(f"{i}. <font color='blue'>{name}:</font> {count}", unsafe_allow_html=True)
-                        
+                         
                 with tab3:
                     for i, (test_name, count) in enumerate(zip(['ANOVA', 'SIMPLE LINEAR REGRESSION', 'LOGISTIC REGRESSION', 'CHI-SQUARE TEST'], [anova_count, single_linear_regression_count, logistic_regression_count, chi_square_count]), start=1):
                         st.write(f"{i}. <font color='blue'>{test_name}:</font> {count}", unsafe_allow_html=True)       
