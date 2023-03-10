@@ -18,6 +18,28 @@ def anova(df_final, file, column):
         st.set_option('deprecation.showPyplotGlobalUse', False)
         st.header('Analysis of variance (ANOVA)')
         st.write("\n")
+        
+        with st.expander("One-way or Two-way ANOVA?",expanded=True):   
+            st.write("The variables x and y for a one-way ANOVA are:")
+            st.markdown("- x: a categorical variable with at least three levels (e.g., class A, class B, class C)")
+            st.markdown("- y: a quantitative variable (e.g., height)")
+            st.write("")
+            st.write("The variables x and y for a two-way ANOVA are:")
+            st.write("The variables x and y for a two-way ANOVA depend on whether you have replication or not. Replication means that you have multiple observations for each combination of levels of the independent variables.")
+            st.write("If you have replication,")
+            st.markdown("- x: a categorical variables with at least two levels (e.g., Coke, Pepsi, Sprite, Fanta)")
+            st.markdown("- y: a categorical variables with at least two levels (e.g., male, female)")
+            st.write("")
+            st.write("If you do not have replication,")
+            st.markdown("- x: a categorical variables with at least two levels (e.g., fertilizer (mixture 1, mixture 2, mixture 3))")
+            st.markdown("- y: a quantitative variable (e.g., crop yield or weight of crops)")                 
+            st.markdown('''
+                <style>
+                [data-testid="stMarkdownContainer"] ul{
+                    padding-left:40px;
+                }
+                </style>
+                ''', unsafe_allow_html=True)
         st.subheader("[👁️‍🗨️] Table Preview:")
         st.dataframe(df_final)
 
@@ -25,9 +47,9 @@ def anova(df_final, file, column):
         rows = df_final.shape[0]
         cols = df_final.shape[1]
         with anova_row:
-            st.markdown(f"<span style='color: violet;'>➕ Filtered count of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: violet;'>➕ Filtered # of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
         with anova_col:
-            st.markdown(f"<span style='color: violet;'>➕ Filtered count of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: violet;'>➕ Filtered # of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
 
         column_names = df_final.columns.tolist()
         
@@ -42,19 +64,22 @@ def anova(df_final, file, column):
         else:           
             
                 if (not np.issubdtype(df_final[dependent_column_name], np.number) and df_final[dependent_column_name].nunique() < 2):
-                    st.error(f'❌ SELECTION ERR. #1: {dependent_column_name} column might contain categorical/string variables, column can be either discrete or continuous data with atleast 2 unique values.')
+                    st.error(f'❌ SELECTION ERROR #1: {dependent_column_name} column might contain categorical/string variables, column can be either discrete or continuous data with atleast 2 unique values.')
                 
                 elif (df_final[independent_column_name].nunique() < 2):
-                    st.error(f'❌ SELECTION ERR. #2: {independent_column_name} column must have atleast 2 unique values.') 
+                    st.error(f'❌ SELECTION ERROR #2: {independent_column_name} column must have atleast 2 unique values.') 
                 
                 elif (df_final[dependent_column_name].nunique() < 2):
-                    st.error(f'❌ SELECTION ERR. #3: {dependent_column_name} column must have atleast 2 unique values.') 
+                    st.error(f'❌ SELECTION ERROR #3: {dependent_column_name} column must have atleast 2 unique values.') 
                 
                 elif (pd.api.types.is_string_dtype(df_final[independent_column_name])):
-                    st.error(f'❌ SELECTION ERR. #4: {independent_column_name} column might contain categorical/string variables, column must be normalized first before performing ANOVA test.')
-                    
+                    st.error(f'❌ SELECTION ERROR #4: {independent_column_name} column might contain categorical/string variables, column must be transformed first before performing the ANOVA test.')
+                
                 elif (pd.api.types.is_string_dtype(df_final[dependent_column_name])):
-                    st.error(f'❌ SELECTION ERR. #5: {dependent_column_name} column can be either discrete or continuous data with atleast 2 unique values.')
+                    st.error(f'❌ SELECTION ERROR #5: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the ANOVA test.')
+                    
+                #elif (pd.api.types.is_string_dtype(df_final[dependent_column_name])):
+                #    st.error(f'❌ SELECTION ERROR #6: {dependent_column_name} column can only be either discrete or continuous data with atleast 2 unique values.')
                 
                 else:
                     st.markdown("---")    
