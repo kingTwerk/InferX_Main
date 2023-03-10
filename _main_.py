@@ -5,7 +5,7 @@ import streamlit as st
 from pandas.errors import EmptyDataError
 from streamlit_lottie import st_lottie
 from streamlit_extras.colored_header import colored_header
-from functions import is_ordinal, load_lottiefile, load_lottieurl, get_sheet_names, normalize_numpy, filter_columns
+from functions import is_ordinal, load_lottiefile, load_lottieurl, get_sheet_names, normalize_numpy, filter_columns, transform_column
 
 import openpyxl
 import os
@@ -106,9 +106,9 @@ def main():
             xldrop_cols = df.shape[1]
 
             with xl_drop_row:
-                st.markdown(f"<span style='color: blue;'>➕ Original count of rows : </span> <span style='color: black;'>{xldrop_rows}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: blue;'>➕ Original # of rows : </span> <span style='color: black;'>{xldrop_rows}</span>", unsafe_allow_html=True)
             with xl_drop_col:
-                st.markdown(f"<span style='color: blue;'>➕ Original count of columns : </span> <span style='color: black;'>{xldrop_cols}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: blue;'>➕ Original # of columns : </span> <span style='color: black;'>{xldrop_cols}</span>", unsafe_allow_html=True)
 
             df_final = df
                 
@@ -194,32 +194,80 @@ def main():
                 color_name="violet-70",
             )   
             
-            st.sidebar.markdown(f"<span style='color: black;'>1️⃣ Normalize / Filter: </span> ", unsafe_allow_html=True)
-            filter_checkbox = st.sidebar.checkbox("Filter Column (exclude value)",key="checkbox3")
-            normalize_checkbox = st.sidebar.checkbox("Column Normalization", key="checkbox1")
+            st.sidebar.markdown(f"<span style='color: black;'>1️⃣ Filter / Normalize / Transform Columns : </span> ", unsafe_allow_html=True)
+            filter_checkbox = st.sidebar.checkbox("Filter (to exclude values)",key="checkbox3")
+            normalize_checkbox = st.sidebar.checkbox("Normalization (for quantitative values)", key="checkbox1")
+            transform_checkbox = st.sidebar.checkbox("Transformation (for categorical values)", key="checkbox2")
 
-            if filter_checkbox:
-                df_final = filter_columns(df_final,filter_checkbox)
-
-            if normalize_checkbox:
-                numeric_cols = df._get_numeric_data().columns
-                categorical_cols = df.columns.difference(numeric_cols)
-                selected_cols = st.multiselect("Select which column/s to normalize:", df.columns)
-                if len(selected_cols) == 0:
-                    df_final = df.copy()
-                else:
-                    method = st.selectbox("Select sub normalization method",
-                                                ("Z-Score", "Min-Max", "Decimal Scaling", "Max Absolute", "L1", "L2"))
-                    numeric_selected_cols = [col for col in selected_cols if col in numeric_cols]
-                    categorical_selected_cols = [col for col in selected_cols if col in categorical_cols]
-                    df_norm = normalize_numpy(df_final, numeric_selected_cols, categorical_selected_cols, method)
-                    not_selected_cols = df_final.columns.difference(selected_cols)
-                    df_final = pd.concat([df_norm, df_final[not_selected_cols]], axis=1)
+            if filter_checkbox or normalize_checkbox or transform_checkbox:
+                if filter_checkbox:
+                    df_final = filter_columns(df_final, filter_checkbox)
+                    
+                if transform_checkbox:
+                    selected_cols = st.multiselect("Select which column/s to transform:", df.columns)
+                    if len(selected_cols) == 0:
+                        df_final = df.copy()
+                    else:
+                        for col_name in selected_cols:
+                            method = st.selectbox(f"Select transformation method for column '{col_name}'",
+                                                    ("One-Hot", "Ordinal", "Label" ,"Count", "Frequency"))
+                            
+                            transformed_col = transform_column(df_final, col_name, method)
+                        
+                            df_final[col_name] = transformed_col
+                
+                if normalize_checkbox:
+                    numeric_cols = df._get_numeric_data().columns
+                    categorical_cols = df.columns.difference(numeric_cols)
+                    selected_cols = st.multiselect("Select which column/s to normalize:", df.columns)
+                    if len(selected_cols) == 0:
+                        df_final = df.copy()
+                    else:
+                        method = st.selectbox("Select sub normalization method",
+                                                    ("Z-Score", "Min-Max", "Decimal Scaling", "Max Absolute", "L1", "L2"))
+                        numeric_selected_cols = [col for col in selected_cols if col in numeric_cols]
+                        categorical_selected_cols = [col for col in selected_cols if col in categorical_cols]
+                        df_norm = normalize_numpy(df_final, numeric_selected_cols, categorical_selected_cols, method)
+                        not_selected_cols = df_final.columns.difference(selected_cols)
+                        df_final = pd.concat([df_norm, df_final[not_selected_cols]], axis=1)
             else:
-                df_final = df_final.copy()
+                df_final = df.copy()
 
-            if normalize_checkbox and filter_checkbox:
-                st.subheader("[👁️‍🗨️] Filtered & Normalized Data Preview:")
+            if normalize_checkbox and filter_checkbox and transform_checkbox:
+                st.subheader("[👁️‍🗨️] Filtered , Normalized and Transformed Data Preview:")
+                st.dataframe(df_final)
+                xldrop_rows2 = df_final.shape[0]
+                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                colored_header(
+                    label="",
+                    description="",
+                    color_name="violet-70",
+                    )    
+                
+            elif normalize_checkbox and transform_checkbox:
+                st.subheader("[👁️‍🗨️] Normalized &  Transformed Data Preview:")
+                st.dataframe(df_final)
+                xldrop_rows2 = df_final.shape[0]
+                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                colored_header(
+                    label="",
+                    description="",
+                    color_name="violet-70",
+                    )    
+                
+            elif filter_checkbox and transform_checkbox:
+                st.subheader("[👁️‍🗨️] Filtered & Transformed Data Preview:")
+                st.dataframe(df_final)
+                xldrop_rows2 = df_final.shape[0]
+                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                colored_header(
+                    label="",
+                    description="",
+                    color_name="violet-70",
+                    )    
+                
+            elif filter_checkbox and normalize_checkbox:
+                st.subheader("[👁️‍🗨️] Filtered & Transformed Data Preview:")
                 st.dataframe(df_final)
                 xldrop_rows2 = df_final.shape[0]
                 st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
@@ -248,7 +296,18 @@ def main():
                     label="",
                     description="",
                     color_name="violet-70",
-                    )    
+                    )   
+                
+            elif transform_checkbox:
+                st.subheader("[👁️‍🗨️] Transformed Data Preview:")
+                st.dataframe(df_final)
+                xldrop_rows2 = df_final.shape[0]
+                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                colored_header(
+                    label="",
+                    description="",
+                    color_name="violet-70",
+                    )     
                 
             #st.sidebar.markdown("""---""")
             st.sidebar.write("\n")
@@ -264,7 +323,7 @@ def main():
                 anova_test.t_test_paired(df_final,file,column)
             elif test == "ANOVA":
                 anova_test.anova(df_final,file,column)
-                st.sidebar.info("INFO: The independent ('x') variable can be categorical (normalized), discrete or continuous  while the dependent ('y') variable can be discrete or continuous.")
+                #st.sidebar.info("INFO: The independent ('x') variable can be categorical (transformed), discrete or continuous  while the dependent ('y') variable can be discrete or continuous.")
             elif test == "CHI-SQUARE TEST":
                 chi_square_test.chi_square(df_final,file,column)
             elif test == "LOGISTIC REGRESSION":
@@ -276,6 +335,11 @@ def main():
         details_checkbox = st.sidebar.checkbox("Do you want to more details?", key="checkbox0")
 
         if details_checkbox:
+                colored_header(
+                    label="",
+                    description="",
+                    color_name="violet-70",
+                    )   
                 tab1, tab2, tab3, tab4, tab5, tab6  = st.tabs(["🔽  CURRENT COLUMN TEST SUGGESTIONS  |","🔽  LEVELS OF MEASUREMENTS COUNT  |","🔽  TEST SUGGESTIONS COUNT  |", "🔽  LEVELS OF MEASUREMENTS  |", "🔽  VARIABLE COLUMN TYPE  |","🔽  ALL COLUMNSS TEST SUGGESTIONS  |"])
                 if not column:
                     st.write("No column selected")
@@ -295,7 +359,7 @@ def main():
                 with tab2:
                     for i, (name, count) in enumerate(zip(["CONTINUOUS", "DISCRETE", "BINARY", "NOMINAL", "ORDINAL"], [continuous_count, discrete_count, binary_count, nominal_count, ordinal_count]), start=1):
                         st.write(f"{i}. <font color='blue'>{name}:</font> {count}", unsafe_allow_html=True)
-                         
+                        
                 with tab3:
                     for i, (test_name, count) in enumerate(zip(['ANOVA', 'SIMPLE LINEAR REGRESSION', 'LOGISTIC REGRESSION', 'CHI-SQUARE TEST'], [anova_count, single_linear_regression_count, logistic_regression_count, chi_square_count]), start=1):
                         st.write(f"{i}. <font color='blue'>{test_name}:</font> {count}", unsafe_allow_html=True)       
