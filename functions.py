@@ -75,3 +75,30 @@ def filter_columns(df_final, filter_checkbox):
                     df_final = df_final[~df_final[selected_column].isin(filter_values)]
     
     return df_final
+
+def transform_column(df_final, col_name, method='Ordinal'):
+    # Define dictionary of encoding methods
+    encoding_dict = {
+        'Label': lambda df_final, col_name: LabelEncoder().fit_transform(df_final[col_name]),
+        'One-Hot': lambda df_final, col_name: OneHotEncoder(sparse=False, handle_unknown='ignore').fit_transform(df_final[[col_name]]),
+        'Binary': lambda df_final, col_name: Binarizer(threshold=0.0).fit_transform(df_final[[col_name]]),
+        'Ordinal': lambda df_final, col_name: OrdinalEncoder().fit_transform(df_final[[col_name]]),
+        #'Count': lambda df_final, col_name: df_final.groupby(col_name).size().reset_index(name=f'{col_name}_count')[f'{col_name}_count'],
+        #'Count': lambda df_final, col_name: df_final.groupby(col_name).size().reset_index(name=f'{col_name}_count'),
+        'Count': lambda df_final, col_name: df_final[col_name].map(df_final[col_name].value_counts()),
+        #'Hashing': lambda df_final, col_name: FeatureHasher(n_features=10, input_type='string').transform(df_final[[col_name]].astype(str)).toarray(),
+        #'Hashing': lambda df_final, col_name: ce.HashingEncoder(n_components=10).fit_transform(df_final[col_name]),
+    
+        'Frequency': lambda df_final, col_name: df_final[col_name].map(df_final[col_name].value_counts()).fillna(0)
+    }
+    # Select encoding method
+    encoder = encoding_dict[method]
+    # Apply encoding to column
+    if method == 'Binary' and df_final[col_name].dtype != 'object':
+        # Only apply binary encoding to numeric columns
+        df_final = encoder(df_final, col_name)
+        df_final.columns = [f'{col_name}_binarized']
+    else:
+        df_final[col_name] = encoder(df_final, col_name)
+    # Return transformed column
+    return df_final[col_name]
