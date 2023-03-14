@@ -121,7 +121,7 @@ def linear_regression(data, file,column):
                         st.write("\n")
                         st.subheader("[✍] Linear Regression Test")
 
-                        st.markdown(f"<h3 style='color: black;'>Intercept:</h3>", unsafe_allow_html=True)
+                        
                         st.write("\n")
                         SI1, SI2 = st.columns((1,5), gap="small")
                         with SI1:
