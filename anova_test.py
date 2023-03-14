@@ -109,7 +109,7 @@ def anova(df_final, file, column):
                         with F1:
                             st.write("")
                         with C1:
-                            with st.expander("F-statistic and Critical Value?",expanded=False):   
+                            with st.expander("Understanding the F-Statistic and Critical Value",expanded=False):   
                                 st.write("The F-statistic is a measure of how much the variance between the group means differs from the variance within the groups. If the group means are all equal (as in the null hypothesis), then the F-statistic will be close to 1. However, if the group means are not equal, then the F-statistic will be larger.")
                                 st.write("")
                                 st.write("The F-statistic is compared to a critical value to determine whether to reject or fail to reject the null hypothesis. The critical value is determined based on the degrees of freedom (df) associated with the test. The df are calculated based on the number of groups being compared and the sample size.")
@@ -141,7 +141,7 @@ def anova(df_final, file, column):
                         with P1:
                             st.write("")
                         with SL2:
-                            with st.expander("P-Value and Significance Level?",expanded=False):   
+                            with st.expander("Understanding the Significance Level and P-value",expanded=False):   
                                 st.write("The p-value in ANOVA represents the probability that the differences between the groups are due to chance. A small p-value (usually less than 0.05) indicates that the differences between the groups are unlikely to be due to chance, and we can reject the null hypothesis that there is no difference between the groups. In other words, if the p-value is small, it suggests that there is a significant difference between at least two of the groups.")
                                 st.write("")
                                 st.write("The significance level in ANOVA works in a similar way as in other statistical tests. We set a significance level, usually at 0.05, which represents the maximum probability of making a Type I error, which is rejecting the null hypothesis when it's actually true. If the p-value is less than the significance level, we reject the null hypothesis and conclude that there is a statistically significant difference between at least two of the groups.")
