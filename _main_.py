@@ -210,8 +210,8 @@ def main():
                     else:
                         for col_name in selected_cols:
                             method = st.selectbox(f"Select transformation method for column '{col_name}'",
-                                                    ("One-Hot", "Ordinal", "Label" ,"Count", "Frequency"))
-                            
+                                                    #("One-Hot", "Ordinal", "Label" ,"Count", "Frequency"))
+                                                    ("Label" , "Frequency"))
                             transformed_col = transform_column(df_final, col_name, method)
                         
                             df_final[col_name] = transformed_col
