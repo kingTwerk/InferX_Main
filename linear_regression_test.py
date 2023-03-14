@@ -120,14 +120,12 @@ def linear_regression(data, file,column):
                         
                         st.write("\n")
                         st.subheader("[✍] Linear Regression Test")
-
-                        
                         st.write("\n")
                         SI1, SI2 = st.columns((1,5), gap="small")
                         with SI1:
                             st.write("")
                         with SI2:
-                            with st.expander("Slope and Intercept?",expanded=False):   
+                            with st.expander("The Importance of Slope and Intercept",expanded=False):   
                                 st.write("In a linear regression, we draw a straight line between two things to see how they're related. The slope of the line tells us how much one thing changes when the other thing changes by one unit.")
                                 st.write("")
                                 st.write("For example, if we're looking at how studying affects grades, the slope of the line tells us how much a student's grades change for every additional hour they study. If the slope is positive, it means that as students study more, their grades tend to go up. If the slope is negative, it means that as students study more, their grades tend to go down.")
@@ -166,7 +164,7 @@ def linear_regression(data, file,column):
                         with R1:
                             st.write("")
                         with R2:
-                            with st.expander("R and R-Squared values?",expanded=False):   
+                            with st.expander("Exploring the Relationship with R-Value and R-Squared Value",expanded=False):   
                                 st.write("Let's say we want to know if there's a relationship between the amount of time a student spends studying and their grades. We can use simple linear regression to see if there's a linear relationship between these two variables.")
                                 st.write("")
                                 st.write("The R-value tells us how strong the linear relationship is between studying and grades. If we get an R-value of 0.8, it means there's a strong positive linear relationship between studying and grades - as a student spends more time studying, their grades tend to improve. On the other hand, if we get an R-value of -0.6, it means there's a moderate negative linear relationship between studying and grades - as a student spends more time studying, their grades tend to decrease.")
@@ -207,7 +205,7 @@ def linear_regression(data, file,column):
                         with P1:
                             st.write("")
                         with SL2:
-                            with st.expander("P-Value and Significance Level?",expanded=False):   
+                            with st.expander("Understanding the Significance Level and P-value",expanded=False):   
                                 st.write("Let's say you and your classmates are studying for an exam, and you want to know if the number of hours you study is related to the grades you get. To test this relationship, you decide to perform a simple linear regression.")
                                 st.write("")
                                 st.write("You start by collecting data on the number of hours each student studied and their corresponding grades. You then plot the data on a scatterplot and draw a straight line through the points to represent the relationship between the two variables.")
@@ -240,7 +238,8 @@ def linear_regression(data, file,column):
                         with SE1:
                             st.write("")
                         with SE2:
-                            with st.expander("Standard Error?",expanded=False):   
+                            with st.expander("Understanding the Standard Error",expanded=False):   
+                                 
                                 st.write("Imagine you're a student and you're taking a test. You've studied hard and you're feeling confident, but you know that you might still make some mistakes. You finish the test and turn it in, and your teacher grades it and gives you a score. But you're not sure how accurate that score really is, because you know you might have made some mistakes.")
                                 st.write("")
                                 st.write("This is where the standard error comes in. It's like a measure of how much you might expect your score to vary if you took the same test over and over again. If the standard error is small, it means that your score is probably pretty accurate and you can be confident in it. But if the standard error is large, it means that your score is less reliable and could be off by quite a bit.")
