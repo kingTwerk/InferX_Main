@@ -12,7 +12,8 @@ from scipy.stats import linregress
 import statsmodels.api as sm
 
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix, mean_squared_error
+from sklearn.feature_selection import f_regression
 
 from streamlit_extras.colored_header import colored_header
 import os
@@ -102,8 +103,7 @@ def linear_regression(data, file,column):
                         st.error(f'❌ SELECTION ERROR #6: All values of {y_column_name} column are identical.')
                         #st.error("❌ SELECTION ERR. #6: All values of x and y are identical, cannot calculate linear regression.")    
                     else:                           
-                        slope, intercept, r_value, p_value, std_err = linregress(X, y)       
-
+                        slope, intercept, r_value, p_value, std_err = linregress(X, y)      
                         mean_x = np.mean(X)
                         mean_y = np.mean(y)
 
@@ -112,13 +112,32 @@ def linear_regression(data, file,column):
                         mode_y = data[y_column_name].mode()[0]
 
                         std_y = np.std(y)
+                        
+                        r_squared = r_value ** 2
 
                         sum_xy = np.sum((X-mean_x)*(y-mean_y))
                         sum_x2 = np.sum( (X-mean_x)**2)
+                        
                         st.write("\n")
                         st.subheader("[✍] Linear Regression Test")
 
+                        st.markdown(f"<h3 style='color: black;'>Intercept:</h3>", unsafe_allow_html=True)
                         st.write("\n")
+                        SI1, SI2 = st.columns((1,5), gap="small")
+                        with SI1:
+                            st.write("")
+                        with SI2:
+                            with st.expander("Slope and Intercept?",expanded=False):   
+                                st.write("In a linear regression, we draw a straight line between two things to see how they're related. The slope of the line tells us how much one thing changes when the other thing changes by one unit.")
+                                st.write("")
+                                st.write("For example, if we're looking at how studying affects grades, the slope of the line tells us how much a student's grades change for every additional hour they study. If the slope is positive, it means that as students study more, their grades tend to go up. If the slope is negative, it means that as students study more, their grades tend to go down.")
+                                st.write("")
+                                st.write("The slope is an important part of the linear regression because it helps us understand the relationship between the two things we're looking at. We can use the slope to make predictions, like if a student studies for 3 hours, we can use the slope to estimate what their grade might be.")
+                                st.write("")
+                                st.write("In addition to the slope, we also look at the intercept, which is where the line crosses the y-axis. The intercept tells us what the predicted value of the response variable (in our example, the predicted grade) would be if the predictor variable (in our example, the number of hours studied) was zero.")
+                                st.write("")
+                                st.write("Together, the slope and intercept help us understand the relationship between the two things we're looking at and make predictions based on that relationship.")                        
+                            
                         slope1a, slope2a = st.columns((1,5), gap="small")
                         with slope1a:
                             st.metric("Slope",f"{slope:.2f}")
@@ -141,7 +160,20 @@ def linear_regression(data, file,column):
                                 st.success(f'* With an intercept of {intercept:.2f} that is greater than 0, it means that when the {x_column_name} variable is zero, the predicted value of the {y_column_name} variable is {intercept:.2f}')
                             else:
                                 st.warning(f'* With an intercept of {intercept:.2f} that is less than 0, it means that when the {x_column_name} variable is zero, the predicted value of the {y_column_name} variable is {intercept:.2f}')
-
+                        st.write("\n")
+                        st.write("\n")                        
+                        R1, R2 = st.columns((1,5), gap="small")
+                        with R1:
+                            st.write("")
+                        with R2:
+                            with st.expander("R and R-Squared values?",expanded=False):   
+                                st.write("Let's say we want to know if there's a relationship between the amount of time a student spends studying and their grades. We can use simple linear regression to see if there's a linear relationship between these two variables.")
+                                st.write("")
+                                st.write("The R-value tells us how strong the linear relationship is between studying and grades. If we get an R-value of 0.8, it means there's a strong positive linear relationship between studying and grades - as a student spends more time studying, their grades tend to improve. On the other hand, if we get an R-value of -0.6, it means there's a moderate negative linear relationship between studying and grades - as a student spends more time studying, their grades tend to decrease.")
+                                st.write("")
+                                st.write("The R-squared value tells us how much of the variation in grades can be explained by the amount of time spent studying. For example, if we get an R-squared value of 0.64, it means that 64% of the variation in grades can be explained by the amount of time spent studying. This means that studying is a significant predictor of grades, and that other factors may also be influencing grades.")
+                                st.write("")
+                                st.write("Overall, the R-value and R-squared value help us understand how strong the relationship is between studying and grades, and how much of the variation in grades can be explained by studying. This information can be useful for predicting future grades based on studying habits, or for identifying areas where students may need extra support or resources.")
                         # R-value
                         rvalue1a, rvalue2a = st.columns((1,5), gap="small")
                         with rvalue1a:
@@ -156,6 +188,42 @@ def linear_regression(data, file,column):
                             else:
                                 st.error(f'* With R-value of {r_value:.2f} that is equal to 0, it means that there is no correlation between {x_column_name} and {y_column_name} variables, the {x_column_name} variable does not have an impact on the {y_column_name} variable.')
 
+                        # R-squared
+                        rsquare1a, rsquare2a = st.columns((1,5), gap="small")
+                        with rsquare1a:
+                            #st.metric("R-value (coefficient correlation)",f"{r_value:.2f}")       
+                            st.metric("R-squared",f"{r_squared:.2f}")  
+                            #st.write(r_value)    
+                        with rsquare2a:
+                            if r_squared > 0.5:
+                                st.success(f'* With an R-squared value of {r_squared:.2f} that is greater than 0.5, the linear regression model explains a significant amount of the variability in the {y_column_name} variable based on the {x_column_name} variable. This indicates a strong fit of the model to the data.')
+                            elif r_squared > 0.2:
+                                st.warning(f'* With an R-squared value of {r_squared:.2f} that is between 0.2 and 0.5, the linear regression model explains some of the variability in the {y_column_name} variable based on the {x_column_name} variable, but there is still a significant amount of unexplained variability. This indicates a moderate fit of the model to the data.')
+                            else:
+                                st.error(f'* With an R-squared value of {r_squared:.2f} that is less than 0.2, the linear regression model explains very little of the variability in the {y_column_name} variable based on the {x_column_name} variable, indicating a poor fit of the model to the data.')
+                        st.write("\n")
+                        st.write("\n")
+                        P1, SL2 = st.columns((1,5), gap="small")
+                        with P1:
+                            st.write("")
+                        with SL2:
+                            with st.expander("P-Value and Significance Level?",expanded=False):   
+                                st.write("Let's say you and your classmates are studying for an exam, and you want to know if the number of hours you study is related to the grades you get. To test this relationship, you decide to perform a simple linear regression.")
+                                st.write("")
+                                st.write("You start by collecting data on the number of hours each student studied and their corresponding grades. You then plot the data on a scatterplot and draw a straight line through the points to represent the relationship between the two variables.")
+                                st.write("")
+                                st.write("Once you have this line, you can calculate several values that help you understand the strength and significance of the relationship.")
+                                st.write("")
+                                st.write("The R-value and R-squared value represent how strong the linear relationship is between the number of hours studied and the grades received. The R-value tells you if the relationship is positive or negative, and the R-squared value tells you how much of the variation in grades can be explained by the number of hours studied.")
+                                st.write("")
+                                st.write("Now, imagine you want to know if the relationship you see is real or if it's just due to chance. This is where the p-value and significance level come in. The p-value is like a probability that tells you how likely it is that the relationship you see between the two variables is real and not just due to chance.")
+                                st.write("")
+                                st.write("You set the significance level to 0.05, which means that you're willing to accept a 5% chance that the relationship you see is just by chance. If the p-value is less than 0.05, it means that there is evidence of a significant relationship between the number of hours studied and the grades received.")
+                                st.write("")
+                                st.write("If the p-value is greater than 0.05, it means that the relationship you see is probably not significant and could just be due to chance. In other words, you cannot conclude that the number of hours studied has a significant effect on the grades received.")
+                                st.write("")
+                                st.write("Therefore, by using a simple linear regression, you can determine if the relationship between the number of hours studied and the grades received is significant or not, which helps you make predictions and understand the relationship between the two variables.")                                                                                    
+
                         # P-value
                         pvalue1a, pvalue2a = st.columns((1,5), gap="small")
                         with pvalue1a:
@@ -167,6 +235,18 @@ def linear_regression(data, file,column):
                                 st.success(f'* With p-value of {p_value:.2f} that is less than 0.05, it means that the results for the relationship between {x_column_name} and {y_column_name} are statistically significant, it means that the probability of the results being by chance is less than 5%. So we can say that the relationship between the variables is not random.')
                             else:
                                 st.warning(f'* With p-value of {p_value:.2f} that is greater than 0.05, it means that the results for the relationship between {x_column_name} and {y_column_name} are not statistically significant, it means that the probability of the results being by chance is greater than 5%. So we can say that the relationship between the variables is random.')
+                        st.write("\n")
+                        SE1, SE2 = st.columns((1,5), gap="small")
+                        with SE1:
+                            st.write("")
+                        with SE2:
+                            with st.expander("Standard Error?",expanded=False):   
+                                st.write("Imagine you're a student and you're taking a test. You've studied hard and you're feeling confident, but you know that you might still make some mistakes. You finish the test and turn it in, and your teacher grades it and gives you a score. But you're not sure how accurate that score really is, because you know you might have made some mistakes.")
+                                st.write("")
+                                st.write("This is where the standard error comes in. It's like a measure of how much you might expect your score to vary if you took the same test over and over again. If the standard error is small, it means that your score is probably pretty accurate and you can be confident in it. But if the standard error is large, it means that your score is less reliable and could be off by quite a bit.")
+                                st.write("")
+                                st.write("In a similar way, the standard error in a simple linear regression is a measure of how much you might expect the slope of the regression line to vary if you took different samples from the same population. If the standard error is small, it means that the slope of the regression line is probably a good estimate of the true population slope and you can be confident in it. But if the standard error is large, it means that the slope of the regression line is less reliable and could be off by quite a bit.")
+
                                 
                         # Standard error
                         std1a, std2a = st.columns((1,5), gap="small")
