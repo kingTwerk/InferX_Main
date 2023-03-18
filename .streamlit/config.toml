@@ -10,6 +10,6 @@ maxMessageSize = 200
 [theme]
 primaryColor="blue"
 backgroundColor="#ffffff"
-secondaryBackgroundColor="blue"
+secondaryBackgroundColor="def1d5"
 textColor="#000000"
 font="sans serif"
