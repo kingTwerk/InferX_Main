@@ -8,8 +8,8 @@ maxUploadSize = 200
 maxMessageSize = 200
 
 [theme]
-primaryColor="#2214c7"
+primaryColor="blue"
 backgroundColor="#ffffff"
 secondaryBackgroundColor="#e8eef9"
 textColor="#000000"
-font="monospace"
+font="sans-serif"
