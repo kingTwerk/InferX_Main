@@ -27,7 +27,7 @@ from sklearn.preprocessing import LabelEncoder
 lottie_hacking = load_lottiefile("lottiefiles/hacker.json")
 lottie_hello = load_lottieurl("https://assets1.lottiefiles.com/private_files/lf30_yalmtkoy.json")
 
-st.set_page_config(page_title="INFER-X (FN)", layout='wide', initial_sidebar_state='expanded', page_icon='👁️‍🗨️')
+st.set_page_config(page_title="INFER-X (updated 031823)", layout='wide', initial_sidebar_state='expanded', page_icon="👁️‍🗨️")
 
 image,title = st.columns((1,16), gap="small")
 with image:
