@@ -8,22 +8,8 @@ maxUploadSize = 200
 maxMessageSize = 200
 
 [theme]
-
-# The preset Streamlit theme that your custom theme inherits from. One of "light" or "dark".
-base = "light"
-
-# Primary accent color for interactive elements.
-# primaryColor =
-
-# Background color for the main content area.
-# backgroundColor =
-
-# Background color used for the sidebar and most interactive widgets.
-# secondaryBackgroundColor =
-
-# Color used for almost all text.
-# textColor =
-
-# Font family for all text in the app, except code blocks. One of "sans serif", "serif", or "monospace".
-#font = "serif"
-font="monospace"
+primaryColor="#2214c7"
+backgroundColor="#ffffff"
+secondaryBackgroundColor="#e8eef9"
+textColor="#000000"
+font="sans serif"
