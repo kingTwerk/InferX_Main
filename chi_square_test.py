@@ -256,7 +256,6 @@ def chi_square(df_final, file, column):
             st.error(f'❌ SELECTION ERROR #5: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the ANOVA test.')         
         except KeyError:
             st.error(f'❌ SELECTION ERROR #6: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the ANOVA test.')         
-
         except ValueError:
             st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
         except AttributeError:
