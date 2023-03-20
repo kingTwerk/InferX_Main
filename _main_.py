@@ -166,7 +166,8 @@ def main():
                 elif level == "Ordinal":
                     recommendations[df_final.columns[i]] = ["ANOVA", "CHI-SQUARE TEST"]
                 elif level == "Discrete":
-                    recommendations[df_final.columns[i]] = ["ANOVA","CHI-SQUARE TEST", "LOGISTIC REGRESSION"]
+                    #recommendations[df_final.columns[i]] = ["ANOVA","CHI-SQUARE TEST", "LOGISTIC REGRESSION"]
+                    recommendations[df_final.columns[i]] = ["ANOVA", "LOGISTIC REGRESSION"]
                 elif level == "Nominal":
                     recommendations[df_final.columns[i]] = ["ANOVA","CHI-SQUARE TEST"]
                 else:
