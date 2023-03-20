@@ -17,7 +17,7 @@ import datetime
 #def chi_square(data, file):
 def chi_square(df_final, file, column):
 
-    data = data.select_dtypes(include=['object','int'])
+    data = data.select_dtypes(include=['object'])
     
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.write("\n")
