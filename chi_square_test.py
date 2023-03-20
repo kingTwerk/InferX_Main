@@ -156,7 +156,8 @@ def chi_square_fixed(fixed_data, file):
  
 
 
-def chi_square(data, file):
+#def chi_square(data, file):
+def chi_square(df_final, file, column):
 
     data = data.select_dtypes(include=['object','int'])
     
