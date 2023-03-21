@@ -191,20 +191,20 @@ def logistic_regression(data, file, column):
                             st.warning(f"* The model is performing decently, with an accuracy of more than 60% but less than 80%.")
                         else:
                             st.error(f"* The model is performing poorly, with an accuracy of less than 60%. An accuracy of less than 60% typically indicates that the model is making accurate predictions for a small proportion of the test instances and there is a significant need for improvement.")
-                    st.write("Confusion Matrix:")
-                    Matrix1a, Matrix2a = st.columns((1,5), gap="small")
-                    with Matrix1a:
-                        df_cm = pd.DataFrame(cm, columns=['True', 'False'], index=['True', 'False'])
-                        #df_cm = df_cm.rename(index={'True': 'True Positive', 'False': 'False Negative'})
-                        #df_cm = df_cm.rename(columns={'True': 'False Positive', 'False': 'True Negative'})
-                        st.dataframe(df_cm)
-                    with Matrix2a:
-                        if cm[1,1] > cm[0,0]:
-                            st.success(f"* The model is making more true positive predictions than true negative predictions. The model is making more correct predictions than incorrect predictions. This is generally a good thing, as it indicates that the model is able to accurately classify a large proportion of the test instances.")
-                        elif cm[1,1] < cm[0,0]:
-                            st.warning(f"* The model is making more true negative predictions than true positive predictions. The model is making more incorrect predictions than correct predictions. This is generally not a good thing, as it indicates that the model is having difficulty accurately classifying the test instances.")
-                        else:
-                            st.info(f"* The model is making an equal number of true positive and true negative predictions. The model is making an equal number of correct and incorrect predictions. This could indicate that the model is performing poorly.")
+                    #st.write("Confusion Matrix:")
+                    #Matrix1a, Matrix2a = st.columns((1,5), gap="small")
+                    #with Matrix1a:
+                    #    df_cm = pd.DataFrame(cm, columns=['True', 'False'], index=['True', 'False'])
+                    #    #df_cm = df_cm.rename(index={'True': 'True Positive', 'False': 'False Negative'})
+                    #    #df_cm = df_cm.rename(columns={'True': 'False Positive', 'False': 'True Negative'})
+                    #    st.dataframe(df_cm)
+                    #with Matrix2a:
+                    #    if cm[1,1] > cm[0,0]:
+                    #        st.success(f"* The model is making more true positive predictions than true negative predictions. The model is making more correct predictions than incorrect predictions. This is generally a good thing, as it indicates that the model is able to accurately classify a large proportion of the test instances.")
+                    #    elif cm[1,1] < cm[0,0]:
+                    #       st.warning(f"* The model is making more true negative predictions than true positive predictions. The model is making more incorrect predictions than correct predictions. This is generally not a good thing, as it indicates that the model is having difficulty accurately classifying the test instances.")
+                    #    else:
+                    #        st.info(f"* The model is making an equal number of true positive and true negative predictions. The model is making an equal number of correct and incorrect predictions. This could indicate that the model is performing poorly.")
                     
                     st.write("\n")
                     F1, C1 = st.columns((1,5), gap="small")
