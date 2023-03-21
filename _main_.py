@@ -164,12 +164,12 @@ def main():
                 elif level == "Binary":
                     recommendations[df_final.columns[i]] = ["ANOVA","CHI-SQUARE TEST", "LOGISTIC REGRESSION"]
                 elif level == "Ordinal":
-                    recommendations[df_final.columns[i]] = ["ANOVA", "CHI-SQUARE TEST"]
+                    recommendations[df_final.columns[i]] = ["ANOVA", "CHI-SQUARE TEST","LOGISTIC REGRESSION"]
                 elif level == "Discrete":
                     #recommendations[df_final.columns[i]] = ["ANOVA","CHI-SQUARE TEST", "LOGISTIC REGRESSION"]
                     recommendations[df_final.columns[i]] = ["ANOVA", "LOGISTIC REGRESSION"]
                 elif level == "Nominal":
-                    recommendations[df_final.columns[i]] = ["ANOVA","CHI-SQUARE TEST"]
+                    recommendations[df_final.columns[i]] = ["ANOVA","CHI-SQUARE TEST","LOGISTIC REGRESSION"]
                 else:
                     recommendations[df_final.columns[i]] = ["NO RECOMMENDATION"]
 
