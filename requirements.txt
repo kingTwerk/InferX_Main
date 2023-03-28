@@ -12,5 +12,6 @@ statsmodels==0.13.5
 streamlit==1.19.0
 streamlit_extras==0.2.6
 streamlit_lottie==0.0.3
+category_encoders==2.6.0
 
 
