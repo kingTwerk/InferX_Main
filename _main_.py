@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+import ydata_profiling as yd
 import streamlit as st
+from streamlit_pandas_profiling import st_profile_report
 
 from pandas.errors import EmptyDataError
 from streamlit_lottie import st_lottie
@@ -24,10 +26,16 @@ from scipy.stats import chi
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler
 from sklearn.preprocessing import LabelEncoder
 
+import base64
+import plotly.express as px
+import webbrowser
+import base64
+
+st.set_page_config(page_title="INFER-X (Local-updated 032823)", layout='wide', initial_sidebar_state='expanded', page_icon="👁️‍🗨️")
+
 lottie_hacking = load_lottiefile("lottiefiles/hacker.json")
 lottie_hello = load_lottieurl("https://assets1.lottiefiles.com/private_files/lf30_yalmtkoy.json")
 
-st.set_page_config(page_title="INFER-X (updated 032023)", layout='wide', initial_sidebar_state='expanded', page_icon="👁️‍🗨️")
 st.markdown(""" <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
@@ -51,37 +59,38 @@ with title:
 
     st.title("Inferential Statistical Tests Recommender") 
 
+
 def main():
+    padding = 0
+    st.markdown(f""" <style>
+        .reportview-container .main .block-container{{
+            padding-top: {padding}rem;
+            padding-right: {padding}rem;
+            padding-left: {padding}rem;
+            padding-bottom: {padding}rem;
+        }} </style> """, unsafe_allow_html=True)
     df = pd.DataFrame()
-    
+
     file = st.file_uploader("FYI: It is recommended to upload your data in csv format, it will help lessen the processing time.", type=["csv", "xlsx"])
+
     if file:
         show_sidebar = True
     else:
         show_sidebar = False
-        
+
     if show_sidebar:
-        st.sidebar.title("[STEPS]") 
+        
         if file is not None:
             file_extension = file.name.split(".")[-1]
-            
+
             if file_extension == "csv":
                 try:
-                    df = pd.read_csv(file, na_values=['N/A', 'NA', '','-'])
-                    for col in df.columns:
-                        if df[col].dtype == 'object':
-                            df[col].fillna('-', inplace=True)
-                        else:
-                            df[col].fillna(0.0, inplace=True)
-     
-                    if 'Date' in df.columns:
-                        df['Date'] = pd.to_datetime(df['Date'])
-                        df['Date'] = df['Date'].dt.date
+                    df = pd.read_csv(file, na_values=['N/A', 'NA',' N/A', ' NA','N/A ', 'NA ',' N/A ', ' NA ', '','-',' - ',' -', '- '])
                 except pd.errors.EmptyDataError:
                     st.sidebar.warning("WARNING: The file is empty. Please select a valid file.")
                 except UnboundLocalError:
                     st.sidebar.warning("WARNING: The file is not found or cannot be read. Please select a valid file.")
-                            
+
             elif file_extension == "xlsx":
                 sheet_names = get_sheet_names(file)
                 if len(sheet_names) > 1:
@@ -89,22 +98,10 @@ def main():
                     df = pd.read_excel(file, sheet_name=selected_sheet, na_values = ['N/A', 'NA', '','-'])
                 else:
                     df = pd.read_excel(file, na_values=['N/A', 'NA', '','-'])
-                
-                for col in df.columns:
-                    if df[col].dtype == 'object':
-                        df[col].fillna('-', inplace=True)
-                    else:
-                        df[col].fillna(0.0, inplace=True)
-         
-                    if df[col].dtype == 'datetime64[ns]':
-                        df[col] = df[col].dt.strftime('%Y-%m-%d')
 
                 if df.shape[0] == 0:
                     st.sidebar.warning("WARNING: The selected file or sheet is empty.")
-        
-            #df.replace("", 0, inplace=True)
-            #st.dataframe(df)
-                    
+            
             button, xl_drop_row, xl_drop_col = st.columns((0.0001,1.5,4.5), gap="small")
             xldrop_rows = df.shape[0]
             xldrop_cols = df.shape[1]
@@ -113,7 +110,38 @@ def main():
                 st.markdown(f"<span style='color: blue;'>➕ Original # of rows : </span> <span style='color: black;'>{xldrop_rows}</span>", unsafe_allow_html=True)
             with xl_drop_col:
                 st.markdown(f"<span style='color: blue;'>➕ Original # of columns : </span> <span style='color: black;'>{xldrop_cols}</span>", unsafe_allow_html=True)
+                
+            st.sidebar.title("🔍 RAW Data Overview:") 
+            if st.sidebar.checkbox("Generate an extensive report providing insights into various aspects of your data.", key="pandas_profiling"): 
 
+                pr = yd.ProfileReport(df, explorative=True)
+
+                file_name = f"raw_data_overview_{file.name.split('.')[0]}.html"
+                pr.to_file(file_name)
+                st.sidebar.success(f"Profile report saved to {file_name}")
+
+                webbrowser.open_new_tab(file_name)
+                
+                with open(file_name, 'rb') as f:
+                        data = f.read()
+                        b64 = base64.b64encode(data).decode('utf-8')
+                        href = f'💾 <a href="data:file/html;base64,{b64}" download="{file_name}" target="_blank">Download report</a>'
+                        st.sidebar.markdown(href, unsafe_allow_html=True)
+
+            st.sidebar.markdown("---")
+            st.sidebar.title("👟 Infer-X Steps:") 
+            
+            for col in df.columns:
+                if df[col].dtype == 'object':
+                    df[col].fillna('-', inplace=True)
+                else:
+                    df[col].fillna(0.00000001 , inplace=True)
+
+                if df[col].dtype == 'datetime64[ns]':
+                    df[col] = df[col].dt.strftime('%Y-%m-%d')
+
+            #st.dataframe(df)
+                    
             df_final = df
                 
             levels = np.empty(df_final.shape[1], dtype=object) 
@@ -188,8 +216,7 @@ def main():
                         logistic_regression_count += 1
                     elif test == "CHI-SQUARE TEST":
                         chi_square_count += 1
-                        
-            
+                               
             column_numerical = [f"{columndata}: {isNumerical}" for columndata, isNumerical in zip(df_final.columns, isNumerical)]
             column_options = [f"{col}: {level}" for col, level in zip(df_final.columns, levels)]
             
@@ -215,8 +242,8 @@ def main():
                     else:
                         for col_name in selected_cols:
                             method = st.selectbox(f"Select transformation method for column '{col_name}'",
-                                                    #("One-Hot", "Ordinal", "Label" ,"Count", "Frequency"))
-                                                    ("Label" , "Frequency"))
+                                                    ("One-Hot", "Ordinal", "Label" ,"Count", "Frequency"))
+                            
                             transformed_col = transform_column(df_final, col_name, method)
                         
                             df_final[col_name] = transformed_col
@@ -242,7 +269,7 @@ def main():
                 st.subheader("[👁️‍🗨️] Filtered , Normalized and Transformed Data Preview:")
                 st.dataframe(df_final)
                 xldrop_rows2 = df_final.shape[0]
-                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: violet;'>➕ # of Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
                 colored_header(
                     label="",
                     description="",
@@ -253,7 +280,7 @@ def main():
                 st.subheader("[👁️‍🗨️] Normalized &  Transformed Data Preview:")
                 st.dataframe(df_final)
                 xldrop_rows2 = df_final.shape[0]
-                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: violet;'>➕ # of Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
                 colored_header(
                     label="",
                     description="",
@@ -264,7 +291,7 @@ def main():
                 st.subheader("[👁️‍🗨️] Filtered & Transformed Data Preview:")
                 st.dataframe(df_final)
                 xldrop_rows2 = df_final.shape[0]
-                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: violet;'>➕ # of Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
                 colored_header(
                     label="",
                     description="",
@@ -275,7 +302,7 @@ def main():
                 st.subheader("[👁️‍🗨️] Filtered & Transformed Data Preview:")
                 st.dataframe(df_final)
                 xldrop_rows2 = df_final.shape[0]
-                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: violet;'>➕ # of Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
                 colored_header(
                     label="",
                     description="",
@@ -286,7 +313,7 @@ def main():
                 st.subheader("[👁️‍🗨️] Normalized Data Preview:")
                 st.dataframe(df_final)
                 xldrop_rows2 = df_final.shape[0]
-                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: violet;'>➕ # of Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
                 colored_header(
                     label="",
                     description="",
@@ -296,7 +323,7 @@ def main():
                 st.subheader("[👁️‍🗨️] Filtered Data Preview:")
                 st.dataframe(df_final)
                 xldrop_rows2 = df_final.shape[0]
-                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: violet;'>➕ # of Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
                 colored_header(
                     label="",
                     description="",
@@ -307,19 +334,15 @@ def main():
                 st.subheader("[👁️‍🗨️] Transformed Data Preview:")
                 st.dataframe(df_final)
                 xldrop_rows2 = df_final.shape[0]
-                st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: violet;'>➕ # of Rows : </span> <span style='color: black;'>{xldrop_rows2}</span>", unsafe_allow_html=True)
                 colored_header(
                     label="",
                     description="",
                     color_name="violet-70",
                     )     
-                
-            #st.sidebar.markdown("""---""")
-            st.sidebar.write("\n")
+
             column = st.sidebar.selectbox("2️⃣ SELECT THE 'y' FIELD (dependent variable):", list(recommendations.keys()))
             
-            
-            st.sidebar.write("\n")
             test = st.sidebar.selectbox("3️⃣ SELECT AN INFERENTIAL TEST (determined by the selected 'y' field above):", recommendations[column])  
             
             if test == "SIMPLE LINEAR REGRESSION":
@@ -328,7 +351,6 @@ def main():
                 anova_test.t_test_paired(df_final,file,column)
             elif test == "ANOVA":
                 anova_test.anova(df_final,file,column)
-                #st.sidebar.info("INFO: The independent ('x') variable can be categorical (transformed), discrete or continuous  while the dependent ('y') variable can be discrete or continuous.")
             elif test == "CHI-SQUARE TEST":
                 chi_square_test.chi_square(df_final,file,column)
             elif test == "LOGISTIC REGRESSION":
@@ -338,6 +360,7 @@ def main():
         
         st.sidebar.write("\n")                        
         details_checkbox = st.sidebar.checkbox("Do you want to more details?", key="checkbox0")
+        #profiling_checkbox = st.sidebar.checkbox("Raw file profiling?", key="checkbox10")
 
         if details_checkbox:
                 colored_header(
@@ -359,16 +382,15 @@ def main():
                         st.write(f"{i}. <font color='blue'>{numerical.split(':')[0]}</font>: {numerical.split(':')[1]}", unsafe_allow_html=True)              
                 with tab6:
                     for index, (column, tests) in enumerate(recommendations.items(), start=1):
-                        st.write(f"{index}. <font color='blue'>{column}</font>: {', '.join(tests)}", unsafe_allow_html=True)
-                        
+                        st.write(f"{index}. <font color='blue'>{column}</font>: {', '.join(tests)}", unsafe_allow_html=True)       
                 with tab2:
                     for i, (name, count) in enumerate(zip(["CONTINUOUS", "DISCRETE", "BINARY", "NOMINAL", "ORDINAL"], [continuous_count, discrete_count, binary_count, nominal_count, ordinal_count]), start=1):
-                        st.write(f"{i}. <font color='blue'>{name}:</font> {count}", unsafe_allow_html=True)
-                        
+                        st.write(f"{i}. <font color='blue'>{name}:</font> {count}", unsafe_allow_html=True)                       
                 with tab3:
                     for i, (test_name, count) in enumerate(zip(['ANOVA', 'SIMPLE LINEAR REGRESSION', 'LOGISTIC REGRESSION', 'CHI-SQUARE TEST'], [anova_count, single_linear_regression_count, logistic_regression_count, chi_square_count]), start=1):
                         st.write(f"{i}. <font color='blue'>{test_name}:</font> {count}", unsafe_allow_html=True)       
 
+
+
 if __name__ == '__main__':
     main()
-    
