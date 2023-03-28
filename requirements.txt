@@ -14,6 +14,6 @@ streamlit_extras==0.2.6
 streamlit_lottie==0.0.3
 category_encoders==2.6.0
 streamlit_pandas_profiling==0.1.3
-pandas-profiling
+pandas-profiling==3.5.0
 
 
