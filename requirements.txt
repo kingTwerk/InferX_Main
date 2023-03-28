@@ -13,6 +13,6 @@ streamlit==1.19.0
 streamlit_extras==0.2.6
 streamlit_lottie==0.0.3
 category_encoders==2.6.0
-ydata_profiling==4.1.1
+ydata_profiling
 
 
