@@ -10,6 +10,9 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from scipy.stats import linregress
+from sklearn.preprocessing import OneHotEncoder
+
+from functions import transformation_check, is_ordinal, load_lottiefile, load_lottieurl, get_sheet_names, normalize_numpy, filter_columns, transform_column, remove_file, download_csv
 
 from streamlit_extras.colored_header import colored_header
 
@@ -18,26 +21,17 @@ import datetime
 
 def logistic_regression(data, file, column):
 
-    #data = data.select_dtypes(include=['object','float','int'])
+    data = data.select_dtypes(include=['object','float'])
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.header("Logistic Regression")
     
-    with st.expander("Logistic Regression Types.",expanded=True):   
-        st.write("There are different types of logistic regression, such as binary, nominal and ordinal3, depending on the number and nature of the outcome categories.")
-        st.write("Binary logistic regression: The response variable can only belong to one of two categories, such as yes/no, pass/fail, etc. For example, you can use binary logistic regression to predict whether a student will pass a test based on their study hours.")
-        st.markdown("- x: can be nominal, ordinal, interval or ratio-level")
+    with st.expander("Logistic Regression?",expanded=True):   
+        #st.write("There are different types of logistic regression, such as binary, nominal and ordinal3, depending on the number and nature of the outcome categories.")
+        st.write("Binary logistic regression: The response variable can only belong to one of two categories, such as yes/no, pass/fail, etc.")
+        st.markdown("- x: can be continuous or categorical")
         st.markdown("- y: is binary, meaning it can only take on two possible values, such as 0 or 1, yes or no, pass or fail")
-        st.markdown("- For example, you can use binary logistic regression to predict whether a student will pass a test (y) based on their study hours (x), which is a ratio-level variable.")               
         st.write("")
-        st.write("Multinomial logistic regression: The response variable can belong to one of three or more categories and there is no natural ordering among the categories. For example, you can use multinomial logistic regression to predict the political party preference of a voter based on their age, gender and income.")
-        st.markdown("- x: can be nominal, ordinal, interval or ratio-level")
-        st.markdown("- y: is nominal, meaning it can take on three or more values that have no natural ordering")
-        st.markdown("- For example, you can use multinomial logistic regression to predict the political party preference of a voter (y) based on their age (x), which is an interval-level variable; gender (x), which is a nominal variable; and income (x), which is a ratio-level variable.")               
-        st.write("")
-        st.write("Ordinal logistic regression: The response variable can belong to one of three or more categories and there is a natural ordering among the categories. For example, you can use ordinal logistic regression to predict the customer satisfaction level of a product based on its price, quality and features.")
-        st.markdown("- x: can be nominal, ordinal, interval or ratio-level")
-        st.markdown("- y: is ordinal, meaning it can take on three or more values that have a natural ordering")          
-        st.markdown("- For example, you can use ordinal logistic regression to predict the customer satisfaction level of a product (y) based on its price (x), which is a ratio-level variable; quality (x), which is an ordinal variable; and features (x), which are nominal variables.")                      
+        st.markdown("For example, you can use binary logistic regression to predict whether a student will pass a test (y) based on their study hours (x), which is a ratio-level variable.")               
         st.markdown('''
             <style>
             [data-testid="stMarkdownContainer"] ul{
@@ -51,36 +45,25 @@ def logistic_regression(data, file, column):
     if file is not None:
 
         file_name = file.name
-        st.dataframe(data)
 
-        button, log_row, log_col = st.columns((0.0001,1.5,4.5), gap="small")
-        rows = data.shape[0]
-        cols = data.shape[1]
-        with log_row:
-            st.markdown(f"<span style='color: violet;'>➕ Filtered # of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
-        with log_col:
-            st.markdown(f"<span style='color: violet;'>➕ Filtered # of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
-        with button:
-            st.write("")
-            #if st.button("Download CSV"):
-            #    data = data.select_dtypes(include=['object','float','int'])
-            #    now = datetime.datetime.now()
-            #    date_string = now.strftime("%Y-%m-%d")
-            #    # Set default save location to desktop
-            #    desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
-            #    save_path = os.path.join(desktop, f'logistic_filtered_data_csv_{date_string}.csv')
-            #    # write data to the selected file
-            #    data.to_csv(save_path, index=False)
-            #    st.success(f'File saved successfully to {save_path}!')
+        # column_names = data.columns.tolist()
+        # x_col = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", column_names)
 
         column_names = data.columns.tolist()
-        x_col = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", column_names)
-        
-        #x_col = st.selectbox('➕ Select the column name for the X (independent/CATEGORICAL/CONTINUOUS/DISCRETE) variable:', column_names)
-        #y_col = st.selectbox('➕ Select the column name for the y (dependent/BINARY) variable:', column_names)
-
         y_col = column
-        #st.markdown(f"<span style='color: black;'>➕ Selected the y (dependent/BINARY) variable: </span> <span style='color: blue;'>{column}</span>", unsafe_allow_html=True)
+        # Filter column names to only include continuous and categorical variables except binary
+        filtered_column_names = []
+        for col in column_names:
+            if col != y_col:
+                if data[col].dtype == np.int64 or data[col].dtype == np.float64:
+                    if data[col].nunique() > 2:
+                        filtered_column_names.append(col)
+                elif data[col].dtype == object:
+                    if data[col].nunique() > 2 or is_ordinal(data[col]):
+                        filtered_column_names.append(col)
+
+        # Display the filtered column names in the selectbox
+        x_col = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", filtered_column_names)
 
         if y_col == x_col:
             st.error("❌ Both columns are the same. Please select different columns.")
@@ -95,24 +78,128 @@ def logistic_regression(data, file, column):
                 elif (data[x_col].nunique() < 2):
                     st.error(f'❌ 4 {x_col} column must be continuous/categorical and discrete data with atleast 2 unique values.')     
                 else:
-                    for col in data.columns:
-                        # Check if the column is a categorical variable
-                        if data[col].dtype == "object":
-                            # Create a label encoder
-                            le = LabelEncoder()
 
-                            # Fit the label encoder to the column
-                            le.fit(data[col])
+                    label_encoder = LabelEncoder()
+                    label_encoder.fit(data[y_col])
+                    data[y_col] = label_encoder.transform(data[y_col])
+                    
+                    numeric_cols = data._get_numeric_data().columns
+                    categorical_cols = data.columns.difference(numeric_cols)
 
-                            # Transform the column
-                            data[col] = le.transform(data[col])
+                    # Select numerical columns
+                    num_cols = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
+                    # Identify columns that need normalization
+                    needs_normalization = []
+                    for col in numeric_cols:
+                        z_scores = (data[col] - data[col].mean()) / data[col].std()
+                        if (z_scores.max() - z_scores.min()) > 3: # Check if the range of z-scores is greater than 3
+                            needs_normalization.append(col)
+
+                    # Identify columns common in x, y, and needs_normalization
+                    common_cols = set([x_col]).intersection(set(needs_normalization))
+
+                    # If there are common columns, use them as default values for multiselect
+                    if common_cols:
+                        default_values = list(common_cols)
+                    else:
+                        default_values = []
+                    
+                    
+                    # Identify the data type of x_col column
+                    x_col_type = None
+                    if data[x_col].dtype == np.int64:
+                        x_col_type = "integer"
+                    elif data[x_col].dtype == np.float64:
+                        x_col_type = "float"
+                    else:
+                        x_col_type = "object"
+
+                    # Identify which columns are continuous, discrete, nominal, or ordinal
+                    levels = {}
+                    if x_col_type == "integer":
+                        unique_values = data[x_col].nunique()
+                        if unique_values == 2:
+                            levels[x_col] = "binary"
+                        else:
+                            levels[x_col] = "discrete"
+                    elif x_col_type == "float":
+                        unique_values = data[x_col].nunique()
+                        if unique_values == 2:
+                            levels[x_col] = "binary"
+                        else:
+                            levels[x_col] = "continuous"
+                    else:
+                        unique_values = data[x_col].nunique()
+                        if unique_values == 2:
+                            levels[x_col] = "binary"
+                        else:
+                            if is_ordinal(data[x_col]):
+                                levels[x_col] = "ordinal"
+                            else:
+                                levels[x_col] = "nominal"
+
+                    if levels[x_col] == "nominal" and unique_values > 2:
+                        recommended_method = "One-Hot"
+                    elif levels[x_col] == "ordinal":
+                        recommended_method = "Ordinal"
+                    elif levels[x_col] == "continuous":
+                        recommended_method = "Z-Score"
+                    else:
+                        data[x_col] = data[x_col].values.reshape(-1, 1) # Convert to 2D array
+                        
+                    # create the method selection box and set the default value to the recommended method
+                    if recommended_method in ["One-Hot", "Ordinal", "Label"]:
+                        method = st.sidebar.selectbox(
+                            "👉 SELECT TRANSFORMATION METHOD (for selected 'x' field above):",
+                            # ("Frequency", "Label", "One-Hot", "Ordinal"),
+                            # index= ("Frequency", "Label", "One-Hot", "Ordinal").index(recommended_method)
+                            ("Label", "One-Hot", "Ordinal"),
+                            index= ("Label", "One-Hot", "Ordinal").index(recommended_method)
+                        )
+                        transformed_col = transform_column(data, x_col, method)
+                        data[x_col] = transformed_col
+                    else:
+                        selected_cols = st.sidebar.multiselect("👉 COLUMN TO BE NORMALIZED (for selected 'y' field above):", needs_normalization, default=default_values)
+                             
+                        data = data.copy()
+                        # Normalize selected columns
+                        if len(selected_cols) > 0:
+                            method = "Z-Score"
+                            numeric_selected_cols = [col for col in selected_cols if col in numeric_cols]
+                            categorical_selected_cols = [col for col in selected_cols if col not in numeric_cols]
+                            df_norm = normalize_numpy(data, numeric_selected_cols, categorical_selected_cols, method)
+                            not_selected_cols = data.columns.difference(selected_cols)
+                            data = pd.concat([df_norm, data[not_selected_cols]], axis=1)
+                    
+                    st.dataframe(data, height = 200)
+                    button, log_row, log_col = st.columns((0.0001,1.5,4.5), gap="small")
+                    rows = data.shape[0]
+                    cols = data.shape[1]
+                    with log_row:
+                        st.markdown(f"<span style='color: violet;'>➕ Filtered # of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
+                    with log_col:
+                        st.markdown(f"<span style='color: violet;'>➕ Filtered # of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
+                    with button:
+                        st.write("")
+                    
+                    #if st.button("Download CSV"):
+                    #    data = data.select_dtypes(include=['object','float','int'])
+                    #    now = datetime.datetime.now()
+                    #    date_string = now.strftime("%Y-%m-%d")
+                    #    # Set default save location to desktop
+                    #    desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
+                    #    save_path = os.path.join(desktop, f'logistic_filtered_data_csv_{date_string}.csv')
+                    #    # write data to the selected file
+                    #    data.to_csv(save_path, index=False)
+                    #    st.success(f'File saved successfully to {save_path}!')
 
                     # Convert dataframe to NumPy array
                     X = data[x_col].to_numpy()
                     y = data[y_col].to_numpy()
 
+        
                     slope, intercept, r_value, p_value, std_err = linregress(X, y)    
-
+                    
                     # Check if X and y are 1D arrays
                     if len(X.shape) == 1:
                         # Reshape X and y to 2D arrays
@@ -127,8 +214,6 @@ def logistic_regression(data, file, column):
 
                     # Split the data into training and test sets
                     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size,random_state=0) #,random_state=0
-                    #st.dataframe(X_test)
-                    #st.dataframe(y_test)
 
                     # Calculate the mean of Y
                     mean_y = np.mean(y_train)
@@ -151,6 +236,7 @@ def logistic_regression(data, file, column):
                     # Write the sample sizes to the console or to the app 
                     st.sidebar.markdown(f"<span style='color: violet;'>➕ Training set size: </span> <span style='color: black;'>{training_set_size}</span>", unsafe_allow_html=True)
                     st.sidebar.markdown(f"<span style='color: violet;'>➕ Test set size: </span> <span style='color: black;'>{test_set_size}</span>", unsafe_allow_html=True)
+                    
                     # Train the model
                     model = LogisticRegression()
                     model.fit(X_train, y_train)
@@ -162,6 +248,7 @@ def logistic_regression(data, file, column):
                     accuracy = model.score(X_test, y_test)
                     cm = confusion_matrix(y_test, y_pred)
                     precision = precision_score(y_test, y_pred)
+                    
                     f1 = f1_score(y_test, y_pred)
                     recall = recall_score(y_test, y_pred)
                    
@@ -191,20 +278,22 @@ def logistic_regression(data, file, column):
                             st.warning(f"* The model is performing decently, with an accuracy of more than 60% but less than 80%.")
                         else:
                             st.error(f"* The model is performing poorly, with an accuracy of less than 60%. An accuracy of less than 60% typically indicates that the model is making accurate predictions for a small proportion of the test instances and there is a significant need for improvement.")
-                    #st.write("Confusion Matrix:")
-                    #Matrix1a, Matrix2a = st.columns((1,5), gap="small")
-                    #with Matrix1a:
-                    #    df_cm = pd.DataFrame(cm, columns=['True', 'False'], index=['True', 'False'])
-                    #    #df_cm = df_cm.rename(index={'True': 'True Positive', 'False': 'False Negative'})
-                    #    #df_cm = df_cm.rename(columns={'True': 'False Positive', 'False': 'True Negative'})
-                    #    st.dataframe(df_cm)
-                    #with Matrix2a:
-                    #    if cm[1,1] > cm[0,0]:
-                    #        st.success(f"* The model is making more true positive predictions than true negative predictions. The model is making more correct predictions than incorrect predictions. This is generally a good thing, as it indicates that the model is able to accurately classify a large proportion of the test instances.")
-                    #    elif cm[1,1] < cm[0,0]:
-                    #       st.warning(f"* The model is making more true negative predictions than true positive predictions. The model is making more incorrect predictions than correct predictions. This is generally not a good thing, as it indicates that the model is having difficulty accurately classifying the test instances.")
-                    #    else:
-                    #        st.info(f"* The model is making an equal number of true positive and true negative predictions. The model is making an equal number of correct and incorrect predictions. This could indicate that the model is performing poorly.")
+                    
+                    # st.write("Confusion Matrix:")
+                    # Matrix1a, Matrix2a = st.columns((1,5), gap="small")
+                    # with Matrix1a:
+                    #     df_cm = pd.DataFrame(cm, columns=['True', 'False'], index=['True', 'False'])
+                    #     #df_cm = df_cm.rename(index={'True': 'True Positive', 'False': 'False Negative'})
+                    #     #df_cm = df_cm.rename(columns={'True': 'False Positive', 'False': 'True Negative'})
+                    #     st.dataframe(df_cm)
+                    #     #st.write("")
+                    # with Matrix2a:
+                    #     if cm[1,1] > cm[0,0]:
+                    #         st.success(f"* The model is making more true positive predictions than true negative predictions. The model is making more correct predictions than incorrect predictions. This is generally a good thing, as it indicates that the model is able to accurately classify a large proportion of the test instances.")
+                    #     elif cm[1,1] < cm[0,0]:
+                    #         st.warning(f"* The model is making more true negative predictions than true positive predictions. The model is making more incorrect predictions than correct predictions. This is generally not a good thing, as it indicates that the model is having difficulty accurately classifying the test instances.")
+                    #     else:
+                    #         st.info(f"* The model is making an equal number of true positive and true negative predictions. The model is making an equal number of correct and incorrect predictions. This could indicate that the model is performing poorly.")
                     
                     st.write("\n")
                     F1, C1 = st.columns((1,5), gap="small")
@@ -379,6 +468,6 @@ def logistic_regression(data, file, column):
             except TypeError:
                 st.error(f'❌ A [{x_col}] column needs to be categorical/discrete with at least 2 unique values while [{y_col}] column needs to be in binary values.')  
             except ValueError:
-                st.error(f'❌ B [{x_col}] column needs to be categorical/discrete with at least 2 unique values while [{y_col}] column needs to be in binary values.')  
+                 st.error(f'❌ B [{x_col}] column needs to be categorical/discrete with at least 2 unique values while [{y_col}] column needs to be in binary values.')  
             except AttributeError:
                 st.error(f'❌ C [{x_col}] column needs to be categorical/discrete with at least 2 unique values while [{y_col}] column needs to be in binary values.')  
