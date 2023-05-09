@@ -11,18 +11,21 @@ from streamlit_extras.colored_header import colored_header
 
 import os
 import datetime
- 
-def chi_square(df_final, file, column):
 
-    data = df_final.select_dtypes(include=['object','int'])
+from functions import transformation_check, is_ordinal, load_lottiefile, load_lottieurl, get_sheet_names, normalize_numpy, filter_columns, transform_column, remove_file, download_csv
+
+ 
+def chi_square(df_final, file, column, test):
+
+    data = df_final.select_dtypes(include=['object','int64'])
     
     st.set_option('deprecation.showPyplotGlobalUse', False)
-    st.write("\n")
     st.header('Chi-Square')
     with st.expander("Chi-square Test?",expanded=True):   
         st.write("A chi-square test is used to test a hypothesis regarding the distribution of a categorical variable.")
+        st.markdown("- y: a categorical variable with at least two mutually exclusive and independent levels (e.g., political affiliation: Democrat, Republican)")    
         st.markdown("- x: a categorical variable with at least two mutually exclusive and independent levels (e.g., gender: male, female) ")
-        st.markdown("- y: a categorical variable with at least two mutually exclusive and independent levels (e.g., political affiliation: Democrat, Republican)")             
+         
         st.markdown('''
             <style>
             [data-testid="stMarkdownContainer"] ul{
@@ -31,15 +34,15 @@ def chi_square(df_final, file, column):
             </style>
             ''', unsafe_allow_html=True)
     st.subheader("[👁️‍🗨️] Table Preview:")
-    st.dataframe(data)
+    st.dataframe(df_final, height = 200)
 
-    button, chi_row, chi_col = st.columns((5,1,1), gap="small")
-    rows = data.shape[0]
-    cols = data.shape[1]
+    button, chi_row, chi_col = st.columns((0.0001,1.5,4.5), gap="small")
+    rows = df_final.shape[0]
+    cols = df_final.shape[1]
     with chi_row:
-        st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
+        st.markdown(f"<span style='color: violet;'>➕ # of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
     with chi_col:
-        st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
+        st.markdown(f"<span style='color: violet;'>➕ # of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
     with button:
         st.write("")
         #if st.button("Download CSV"):
@@ -57,12 +60,12 @@ def chi_square(df_final, file, column):
     color_name="violet-70",
     )  
     st.write("\n")    
-    column_names = data.columns.tolist()
+    column_names = df_final.columns.tolist()
 
     # Select the columns to encode and test
     #independent_column_name  = st.selectbox("➕ Select the column name for the X (independent/CATEGORICAL/DISCRETE) variable", column_names)
-    int_column_names = [col for col in column_names if data[col].dtype == 'int64']
-    object_column_names = [col for col in column_names if data[col].dtype == 'object']
+    int_column_names = [col for col in column_names if df_final[col].dtype == 'int64']
+    object_column_names = [col for col in column_names if df_final[col].dtype == 'object']
     filtered_column_names = int_column_names + object_column_names
     independent_column_name = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", object_column_names)
 
@@ -89,41 +92,103 @@ def chi_square(df_final, file, column):
                 st.error(f'❌ SELECTION ERROR #3: {dependent_column_name} column must have atleast 2 unique values.') 
 
             elif (pd.api.types.is_string_dtype(df_final[dependent_column_name])):
-                st.error(f'❌ SELECTION ERROR #4: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the ANOVA test.')
+                st.error(f'❌ SELECTION ERROR #4: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the Chi-square test.')
             else:
+                isNumerical = []
+                for columndata in df_final.columns:
+                    if df_final[columndata].dtype == np.int64 or df_final[columndata].dtype == np.float64:
+                        isNumerical.append("Quantitative")
+                    else:
+                        isNumerical.append("Categorical")
+
+                transformation_check(df_final, isNumerical, column, test)
             
                 # Select the significance level
                 #alpha = st.slider("Select the significance level (alpha):", 0.0, 1.0, 0.05)
                 alpha = 0.05
 
                 # Initialize the encoder
-                encoder = OrdinalEncoder()
+                # encoder = OrdinalEncoder()
 
                 # Encode the selected columns
                 # fixed_data[[independent_column_name , column_2]] = encoder.fit_transform(fixed_data[[independent_column_name , column_2]])
-                data[[independent_column_name ]] = encoder.fit_transform(data[[independent_column_name ]])
+                # df_final[[independent_column_name ]] = encoder.fit_transform(df_final[[independent_column_name ]])
+                
+                # Identify the data type of x_col column
+                x_col_type = None
+                if data[independent_column_name].dtype == np.int64:
+                    x_col_type = "integer"
+                elif data[independent_column_name].dtype == np.float64:
+                    x_col_type = "float"
+                else:
+                    x_col_type = "object"
+
+                # Identify which columns are continuous, discrete, nominal, or ordinal
+                levels = {}
+                if x_col_type == "integer":
+                    unique_values = data[independent_column_name].nunique()
+                    if unique_values == 2:
+                        levels[independent_column_name] = "binary"
+                    else:
+                        levels[independent_column_name] = "discrete"
+                elif x_col_type == "float":
+                    unique_values = data[independent_column_name].nunique()
+                    if unique_values == 2:
+                        levels[independent_column_name] = "binary"
+                    else:
+                        levels[independent_column_name] = "continuous"
+                else:
+                    unique_values = data[independent_column_name].nunique()
+                    if unique_values == 2:
+                        levels[independent_column_name] = "binary"
+                    else:
+                        if is_ordinal(data[independent_column_name]):
+                            levels[independent_column_name] = "ordinal"
+                        else:
+                            levels[independent_column_name] = "nominal"
+
+                if levels[independent_column_name] == "nominal" and unique_values > 2:
+                    recommended_method = "One-Hot"
+                elif levels[independent_column_name] == "ordinal":
+                    recommended_method = "Ordinal"
+                elif levels[independent_column_name] == "binary":
+                    recommended_method = "Label"
+                else:
+                    data[independent_column_name] = data[independent_column_name].values.reshape(-1, 1) # Convert to 2D array
+                    
+                # create the method selection box and set the default value to the recommended method
+                if recommended_method in ["One-Hot", "Ordinal", "Label"]:
+                    method = st.sidebar.selectbox(
+                        "👉 SELECT TRANSFORMATION METHOD (for selected 'x' field above):",
+                        # ("Frequency", "Label", "One-Hot", "Ordinal"),
+                        # index= ("Frequency", "Label", "One-Hot", "Ordinal").index(recommended_method)
+                        ("Label", "One-Hot", "Ordinal"),
+                        index= ("Label", "One-Hot", "Ordinal").index(recommended_method)
+                    )
+                    transformed_col = transform_column(data, independent_column_name, method)
+                    data[independent_column_name] = transformed_col                
                 
                 # Compute the chi-square test for each column
-                chi2_score_1, p_value_1, _, _ = chi2_contingency(pd.crosstab(data[independent_column_name ], data[dependent_column_name]))
+                chi2_score_1, p_value_1, _, _ = chi2_contingency(pd.crosstab(df_final[independent_column_name ], df_final[dependent_column_name]))
                 #chi2_score_2, p_value_2, _, _ = chi2_contingency(pd.crosstab(fixed_data[column_2], fixed_data[dependent_column_name]))
 
                 # Compute the degrees of freedom and the critical value
-                degrees_of_freedom_1 = data[independent_column_name ].nunique() - 1
+                degrees_of_freedom_1 = df_final[independent_column_name ].nunique() - 1
                 #degrees_of_freedom_2 = fixed_data[column_2].nunique() - 1
                 critical_value_1 = chi2.ppf(q=1-alpha, df=degrees_of_freedom_1)
                 #critical_value_2 = chi2.ppf(q=1-alpha, df=degrees_of_freedom_2)
 
                 # Calculate the mean of Y
-                mean_y = np.mean(data[dependent_column_name])
+                mean_y = np.mean(df_final[dependent_column_name])
 
                 # Calculate the median of Y
-                median_y = np.median(data[dependent_column_name])
+                median_y = np.median(df_final[dependent_column_name])
 
                 # Calculate the mode of Y
-                mode_y = data[dependent_column_name].mode()[0]
+                mode_y = df_final[dependent_column_name].mode()[0]
 
                 # Calculate the standard deviation of Y
-                std_y = np.std(data[dependent_column_name])
+                std_y = np.std(df_final[dependent_column_name])
 
                 # Display the results
                 st.subheader("[✍] Chi-Square Test")
@@ -139,9 +204,9 @@ def chi_square(df_final, file, column):
                         st.write("Imagine you are a teacher and you want to know if your students are evenly distributed among four classes: A, B, C, and D. You count the number of students in each class and compare it to the expected number of students in each class if they were evenly distributed. The difference between the observed and expected number of students in each class is the chi-square score. If the chi-square score is high, it means that the students are not evenly distributed among the classes.")
                         st.write("")
                         st.write("Now, imagine that you want to know if the difference between the observed and expected number of students in each class is statistically significant. You can use the chi-square critical value to determine this. The chi-square critical value is a threshold for statistical significance for certain hypothesis tests and defines confidence intervals for certain parameters. If the chi-square score is greater than the chi-square critical value, then the results of the test are statistically significant.")
-                
+
                 st.write("\n")
-                chi_cola1, chi_colb2, = st.columns((1,5), gap="small")
+                chi_cola1, chi_colb2, = st.columns((1,5), gap="small")  
                 with chi_cola1:
                     #st.write(f'Chi-Square Score: {chi2_score_1:.2f}',  prefix="\t")
                     st.metric("Chi-Square Score:",f"{chi2_score_1:.2f}")
@@ -252,11 +317,8 @@ def chi_square(df_final, file, column):
                 st.markdown(f"<span style='color: black;'>If the p-value is less than or equal to 0.05, it means that the result is statistically significant and we reject the null hypothesis. This suggests that the independent variable </span> <span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'> has an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span>. <span style='color: black;'>On the other hand, if the p-value is greater than 0.05, it means that the result is not statistically significant and we fail to reject the null hypothesis. This suggests that the independent variable </span><span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'>not have an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span><span style='color: black;'>.</span>", unsafe_allow_html=True)
         
 
-        except TypeError:
-            st.error(f'❌ SELECTION ERROR #5: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the ANOVA test.')         
-        except KeyError:
-            st.error(f'❌ SELECTION ERROR #6: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the ANOVA test.')         
-        except ValueError:
-            st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
-        except AttributeError:
+        except (TypeError,KeyError):
+            st.error(f'❌ SELECTION ERROR #5: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the Chi-square test.')         
+
+        except (ValueError,AttributeError):
             st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
