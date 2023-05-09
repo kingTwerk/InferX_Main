@@ -3,7 +3,6 @@ import pandas as pd
 import ydata_profiling as yd
 import streamlit as st
 from streamlit_pandas_profiling import st_profile_report
-import klib
 
 from pandas.errors import EmptyDataError
 from streamlit_lottie import st_lottie
