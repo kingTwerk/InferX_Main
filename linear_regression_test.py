@@ -5,6 +5,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import scipy.stats as stats
+from functions import transformation_check, is_ordinal, load_lottiefile, load_lottieurl, get_sheet_names, normalize_numpy, filter_columns, transform_column, remove_file, download_csv
 
 from scipy.stats import f_oneway
 from scipy.stats import pearsonr
@@ -21,7 +22,7 @@ import datetime
 
 def linear_regression(data, file,column):
 
-    data = data.select_dtypes(include=['float','int'])
+    data = data.select_dtypes(include=['float'])
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.write("\n")
     st.header('Simple Linear Regression')
@@ -31,10 +32,10 @@ def linear_regression(data, file,column):
         with st.expander("Simple linear regression?",expanded=True):   
             st.write("Simple linear regression is a statistical method that allows us to summarize and study relationships between two continuous (quantitative) variables.")
             st.write("")
-            st.write("The variables x and y do not need to be non-numeric variables. They can be any continuous variables that can take on any value within a range.")
+            st.write("✅ The variables x and y can be any continuous variables that can take on any value within a range.")
             st.markdown("- e.g., height and weight are continuous variables.")
             st.write("")
-            st.write("Categorical and nominal variables are not suitable for simple linear regression because they cannot be measured on a numerical scale.")
+            st.write("❗ Categorical and nominal variables are not suitable for simple linear regression because they cannot be measured on a numerical scale.")
             st.markdown("- e.g., gender and eye color are categorical variables.")             
             st.markdown('''
                 <style>
@@ -45,15 +46,15 @@ def linear_regression(data, file,column):
                 ''', unsafe_allow_html=True)
         st.info("Non-numerical columns are removed.")
         st.subheader("[👁️‍🗨️] Table Preview:")
-        st.dataframe(data)
-
-        button, slr_row, slr_col = st.columns((5,1,1), gap="small")
+        st.dataframe(data, height = 200)
+       
+        button, slr_row, slr_col = st.columns((0.0001,1.5,4.5), gap="small")
         rows = data.shape[0]
         cols = data.shape[1]
         with slr_row:
-            st.markdown(f"<span style='color: blue;'>Rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: violet;'>➕ # of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
         with slr_col:
-            st.markdown(f"<span style='color: blue;'>Columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: violet;'>➕ # of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
         with button:
             st.write("")
             #if st.button("Download CSV"):
@@ -102,14 +103,52 @@ def linear_regression(data, file,column):
                     elif (len(set(y)) == 1):
                         st.error(f'❌ SELECTION ERROR #6: All values of {y_column_name} column are identical.')
                         #st.error("❌ SELECTION ERR. #6: All values of x and y are identical, cannot calculate linear regression.")    
-                    else:                           
+                    else: 
+    
+                        numeric_cols = data._get_numeric_data().columns
+                        categorical_cols = data.columns.difference(numeric_cols)
+
+                        # Select numerical columns
+                        num_cols = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
+                        # Identify columns that need normalization
+                        needs_normalization = []
+                        for col in numeric_cols:
+                            z_scores = (data[col] - data[col].mean()) / data[col].std()
+                            if (z_scores.max() - z_scores.min()) > 3: # Check if the range of z-scores is greater than 3
+                                needs_normalization.append(col)
+
+                        # Identify columns common in x, y, and needs_normalization
+                        common_cols = set([x_column_name, y_column_name]).intersection(set(needs_normalization))
+
+                        # If there are common columns, use them as default values for multiselect
+                        if common_cols:
+                            default_values = list(common_cols)
+                        else:
+                            default_values = []
+
+                        # Generate multiselect box with default values
+                        selected_cols = st.sidebar.multiselect("👉 NORMALIZE:", needs_normalization, default=default_values)
+
+                        df_final = data.copy()
+                        # Normalize selected columns
+                        if len(selected_cols) > 0:
+                            method = "Z-Score"
+                            numeric_selected_cols = [col for col in selected_cols if col in numeric_cols]
+                            categorical_selected_cols = [col for col in selected_cols if col not in numeric_cols]
+                            df_norm = normalize_numpy(df_final, numeric_selected_cols, categorical_selected_cols, method)
+                            not_selected_cols = df_final.columns.difference(selected_cols)
+                            df_final = pd.concat([df_norm, df_final[not_selected_cols]], axis=1)
+                        
+                        X = df_final[x_column_name].values
+                        y = df_final[y_column_name].values
+                                                                        
                         slope, intercept, r_value, p_value, std_err = linregress(X, y)      
                         mean_x = np.mean(X)
                         mean_y = np.mean(y)
 
                         median_y = np.median(y)
 
-                        mode_y = data[y_column_name].mode()[0]
+                        mode_y = df_final[y_column_name].mode()[0]
 
                         std_y = np.std(y)
                         
@@ -246,7 +285,6 @@ def linear_regression(data, file,column):
                                 st.write("")
                                 st.write("In a similar way, the standard error in a simple linear regression is a measure of how much you might expect the slope of the regression line to vary if you took different samples from the same population. If the standard error is small, it means that the slope of the regression line is probably a good estimate of the true population slope and you can be confident in it. But if the standard error is large, it means that the slope of the regression line is less reliable and could be off by quite a bit.")
 
-                                
                         # Standard error
                         std1a, std2a = st.columns((1,5), gap="small")
                         with std1a:
