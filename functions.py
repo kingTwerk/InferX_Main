@@ -1,11 +1,20 @@
 import numpy as np
 import pandas as pd
+import streamlit_pandas_profiling as spp
 import streamlit as st
 from streamlit_lottie import st_lottie
 from streamlit_extras.colored_header import colored_header
 import json
 import requests
-from sklearn.preprocessing import LabelEncoder
+import category_encoders as ce
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder, OrdinalEncoder, Binarizer
+from sklearn.feature_extraction import FeatureHasher
+import base64
+import os
+import ydata_profiling as yd
+from streamlit_pandas_profiling import st_profile_report
+#from sklearn.preprocessing import BinaryEncoder
+
 
 #@st.experimental_memo
 @st.cache_data
@@ -32,17 +41,16 @@ def get_sheet_names(file):
     return sheet_names
 
 def normalize_numpy(df, numeric_cols, categorical_cols, method='Z-Score'):
+    
     label_encoder = LabelEncoder()
     #df[categorical_cols] = df[categorical_cols].apply(lambda col: label_encoder.fit_transform(col) if col.dtype == 'object' else col)
     
     # Convert categorical columns to strings
     df[categorical_cols] = df[categorical_cols].astype(str)
-
+    
     # Apply label encoder only to categorical columns
     df[categorical_cols] = df[categorical_cols].apply(lambda col: label_encoder.fit_transform(col))
 
-
-    
     normalization_dict = {
         'Z-Score': lambda df, numeric_cols: (df[numeric_cols] - df[numeric_cols].mean()) / df[numeric_cols].std(),
         'Min-Max': lambda df, numeric_cols: (df[numeric_cols] - df[numeric_cols].min()) / (df[numeric_cols].max() - df[numeric_cols].min()),
@@ -53,7 +61,7 @@ def normalize_numpy(df, numeric_cols, categorical_cols, method='Z-Score'):
     }
 
     scaler = normalization_dict[method]
-       
+
     normalized_numeric = normalization_dict[method](df, numeric_cols)
     normalized_df = pd.concat([normalized_numeric, df[categorical_cols]], axis=1)
     
@@ -64,13 +72,13 @@ def filter_columns(df_final, filter_checkbox):
     if filter_checkbox:
 
         columns = df_final.columns.tolist()
-        selected_columns = st.multiselect("Select which column/s to filter:", columns)
+        selected_columns = st.sidebar.multiselect("👉 COLUMN: Select which column/s to filter:", columns)
         if selected_columns:
             for selected_column in selected_columns:
                 if df_final[selected_column].dtype == 'datetime64[ns]':
                     df_final[selected_column] = df_final[selected_column].dt.strftime('%Y-%m-%d')
                 filter_values = sorted(df_final[selected_column].unique().tolist())
-                filter_values = st.multiselect("EXCLUDE: Select filter values for {}".format(selected_column), filter_values)
+                filter_values = st.sidebar.multiselect("👉 EXCLUDE: Select filter values for {}".format(selected_column), filter_values)
                 if filter_values:
                     df_final = df_final[~df_final[selected_column].isin(filter_values)]
     
@@ -102,3 +110,73 @@ def transform_column(df_final, col_name, method='Ordinal'):
         df_final[col_name] = encoder(df_final, col_name)
     # Return transformed column
     return df_final[col_name]
+
+def download_csv(file_name):
+    # Download the data as a CSV file
+    with open(file_name, 'rb') as f:
+            data = f.read()
+            b64 = base64.b64encode(data).decode('utf-8')
+            href = f'💾 <a href="data:file/html;base64,{b64}" download="{file_name}" target="_blank">Download report</a>'
+            st.sidebar.markdown(href, unsafe_allow_html=True)   
+    return file_name
+    
+def remove_file(file_name):
+    os.remove(file_name)  
+
+
+def transformation_check(df_final, isNumerical, column, test):
+
+    if isNumerical[df_final.columns.get_loc(column)] == 'Categorical' and (test == 'CHI-SQUARE' or test == 'ANOVA'):
+        # get the type of the selected column
+        levels = np.empty(df_final.shape[1], dtype=object) 
+        for i, col in enumerate(df_final.columns):  
+            if df_final[col].dtype == np.int64 or df_final[col].dtype == np.float64:
+                if df_final[col].dtype == np.int64:
+                    levels[i] = "Discrete"
+                else:
+                    levels[i] = "Continuous"
+            elif df_final[col].dtype == object:
+                if df_final[col].nunique() == 2:
+                    levels[i] = "Binary"
+                else:
+                    if is_ordinal(df_final[col]):
+                        levels[i] = "Ordinal"
+                    else:
+                        levels[i] = "Nominal"
+            else:
+                levels[i] = "Nominal"
+
+        # determine the recommended transformation method based on the column type
+        column_index = df_final.columns.get_loc(column)
+        if levels[column_index] == "Nominal" and len(df_final[column].unique()) > 2:
+            recommended_method = "One-Hot"
+        elif levels[column_index] == "Binary" and len(df_final[column].unique()) == 2:
+            recommended_method = "Label"
+        elif levels[column_index] == "Ordinal":
+            recommended_method = "Ordinal"
+        else:
+            recommended_method = None
+
+        # create the method selection box and set the default value to the recommended method
+        if recommended_method:
+            method = st.sidebar.selectbox(
+                "👉 SELECT TRANSFORMATION METHOD (for selected 'y' field above):",
+                #("Frequency", "Label", "One-Hot", "Ordinal"),
+                #index= ("Frequency", "Label", "One-Hot", "Ordinal").index(recommended_method)
+                ("Label", "One-Hot", "Ordinal"),
+                index= ("Label", "One-Hot", "Ordinal").index(recommended_method)
+            )
+        else:
+            method = st.sidebar.selectbox(
+                "👉 SELECT TRANSFORMATION METHOD (for selected 'y' field above):",
+                #("Frequency", "Label", "One-Hot", "Ordinal"),
+                ("Label", "One-Hot", "Ordinal"),
+                index=0
+            )
+
+        transformed_col = transform_column(df_final, column, method)
+
+        df_final[column] = transformed_col
+
+        return df_final
+
