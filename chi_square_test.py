@@ -12,7 +12,7 @@ from streamlit_extras.colored_header import colored_header
 import os
 import datetime
 
-from functions import transformation_check, is_ordinal, load_lottiefile, load_lottieurl, get_sheet_names, normalize_numpy, filter_columns, transform_column, remove_file, download_csv
+from functions import transform_column, transformation_check, is_ordinal
 
  
 def chi_square(df_final, file, column, test):
@@ -20,12 +20,10 @@ def chi_square(df_final, file, column, test):
     data = df_final.select_dtypes(include=['object','int64'])
     
     st.set_option('deprecation.showPyplotGlobalUse', False)
-    st.header('Chi-Square')
-    with st.expander("Chi-square Test?",expanded=True):   
+    st.header('🧮 Chi-Square')
+    with st.expander("What is Chi-square Test?",expanded=True):   
         st.write("A chi-square test is used to test a hypothesis regarding the distribution of a categorical variable.")
-        st.markdown("- y: a categorical variable with at least two mutually exclusive and independent levels (e.g., political affiliation: Democrat, Republican)")    
-        st.markdown("- x: a categorical variable with at least two mutually exclusive and independent levels (e.g., gender: male, female) ")
-         
+        st.markdown("- ✅ The variables x and y can be any categorical variable with at least two mutually exclusive and independent levels (e.g., color: red, green, blue or gender: male, female).")    
         st.markdown('''
             <style>
             [data-testid="stMarkdownContainer"] ul{
@@ -101,7 +99,7 @@ def chi_square(df_final, file, column, test):
                     else:
                         isNumerical.append("Categorical")
 
-                transformation_check(df_final, isNumerical, column, test)
+                #transformation_check(df_final, isNumerical, column, test)
             
                 # Select the significance level
                 #alpha = st.slider("Select the significance level (alpha):", 0.0, 1.0, 0.05)
@@ -156,20 +154,8 @@ def chi_square(df_final, file, column, test):
                 else:
                     data[independent_column_name] = data[independent_column_name].values.reshape(-1, 1) # Convert to 2D array
                     
-                # create the method selection box and set the default value to the recommended method
-                if recommended_method in ["One-Hot", "Ordinal", "Label"]:
-                    method = st.sidebar.selectbox(
-                        "👉 SELECT TRANSFORMATION METHOD (for selected 'x' field above):",
-                        # ("Frequency", "Label", "One-Hot", "Ordinal"),
-                        # index= ("Frequency", "Label", "One-Hot", "Ordinal").index(recommended_method)
-                        ("Label", "One-Hot", "Ordinal"),
-                        index= ("Label", "One-Hot", "Ordinal").index(recommended_method)
-                    )
-                    transformed_col = transform_column(data, independent_column_name, method)
-                    data[independent_column_name] = transformed_col                
-                
                 # Compute the chi-square test for each column
-                chi2_score_1, p_value_1, _, _ = chi2_contingency(pd.crosstab(df_final[independent_column_name ], df_final[dependent_column_name]))
+                chi2_score_1, p_value_1, _, _ = chi2_contingency(pd.crosstab(df_final[independent_column_name], df_final[dependent_column_name]), correction=False)
                 #chi2_score_2, p_value_2, _, _ = chi2_contingency(pd.crosstab(fixed_data[column_2], fixed_data[dependent_column_name]))
 
                 # Compute the degrees of freedom and the critical value
