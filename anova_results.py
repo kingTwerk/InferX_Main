@@ -1,16 +1,9 @@
 import streamlit as st
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import numpy as np
 import plotly.graph_objects as go
 from streamlit_extras.colored_header import colored_header
 from scipy.stats import f_oneway
 from scipy.stats import f
-import os
-import datetime
-import math
-import plotly.express as px
+
 
 def anova_result(df_final, independent_column_name, dependent_column_name, file, column):
      
@@ -32,70 +25,84 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
 
         n = len(df_final)
         dfd = n-k
-        c_value = f.ppf(1-alpha, dfn, dfd)
+        c_value = f.ppf(1-alpha, dfn, dfd)   
 
         if f_value == float('inf'):
             st.success(f'* The F-value is not defined because one of the groups has a variance of 0 or the groups have a very large difference in sample size.')
             st.error(f'* The ANOVA test is not appropriate to use and other statistical tests should be considered.')
         else:
             st.write("\n")
-            F1, C1 = st.columns((1,5), gap="small")
-            with F1:
-                st.write("")
-            with C1:
-                with st.expander("Understanding the F-Statistic and Critical Value",expanded=False):   
-                    st.write("The F-statistic is a measure of how much the variance between the group means differs from the variance within the groups. If the group means are all equal (as in the null hypothesis), then the F-statistic will be close to 1. However, if the group means are not equal, then the F-statistic will be larger.")
-                    st.write("")
-                    st.write("The F-statistic is compared to a critical value to determine whether to reject or fail to reject the null hypothesis. The critical value is determined based on the degrees of freedom (df) associated with the test. The df are calculated based on the number of groups being compared and the sample size.")
-                    st.write("")
-                    st.write("An analogy for the F-statistic and critical value in an ANOVA test could be a baking competition. Imagine you're judging a competition where three contestants have each made a cake. You want to determine if there is a significant difference in the average taste score between the three cakes.")
-                    st.write("")
-                    st.write("The F-statistic would be like a score that tells you how much the average taste score differs between the three cakes, relative to the variation in taste scores within each cake. If all of the cakes tasted the same, then the F-statistic would be close to 1. But if one cake tastes significantly better than the others, the F-statistic would be higher.")
-                    st.write("")
-                    st.write("The critical value would be like a threshold you set before judging the competition. If the F-statistic exceeds the critical value, you'll conclude that there is a significant difference in taste between the three cakes. However, if the F-statistic falls below the critical value, you'll conclude that there is not a significant difference in taste between the cakes.")
-                    st.write("")
-                    st.write("In summary, the F-statistic and critical value in an ANOVA test help us determine whether there is a significant difference between the means of three or more groups.")
-            
-            value_a, value_b = st.columns((1,5), gap="small")                        
-            with value_a:
-                st.metric("F-stat:",f"{f_value:.2f}")
+            # F1, C1 = st.columns((1,5), gap="small")
+            # with F1:
+            #     st.write("")
+            # with C1:
+            #     with st.expander("Understanding the F-Statistic and Critical Value",expanded=False):   
+            #         st.write("The F-statistic is a measure of how much the variance between the group means differs from the variance within the groups. If the group means are all equal (as in the null hypothesis), then the F-statistic will be close to 1. However, if the group means are not equal, then the F-statistic will be larger.")
+            #         st.write("")
+            #         st.write("The F-statistic is compared to a critical value to determine whether to reject or fail to reject the null hypothesis. The critical value is determined based on the degrees of freedom (df) associated with the test. The df are calculated based on the number of groups being compared and the sample size.")
+            #         st.write("")
+            #         st.write("An analogy for the F-statistic and critical value in an ANOVA test could be a baking competition. Imagine you're judging a competition where three contestants have each made a cake. You want to determine if there is a significant difference in the average taste score between the three cakes.")
+            #         st.write("")
+            #         st.write("The F-statistic would be like a score that tells you how much the average taste score differs between the three cakes, relative to the variation in taste scores within each cake. If all of the cakes tasted the same, then the F-statistic would be close to 1. But if one cake tastes significantly better than the others, the F-statistic would be higher.")
+            #         st.write("")
+            #         st.write("The critical value would be like a threshold you set before judging the competition. If the F-statistic exceeds the critical value, you'll conclude that there is a significant difference in taste between the three cakes. However, if the F-statistic falls below the critical value, you'll conclude that there is not a significant difference in taste between the cakes.")
+            #         st.write("")
+            #         st.write("In summary, the F-statistic and critical value in an ANOVA test help us determine whether there is a significant difference between the means of three or more groups.")
+                     
+            # value_a, value_b = st.columns((1,5), gap="small")                        
+            # with value_a:
+            #     st.metric("F-stat:", f"{f_value:.2f}")
+            #     st.metric("Critical-value:", f"{c_value:.2f}")
 
-                st.metric("Critical-value:",f"{c_value:.2f}")
+            # with value_b:
+            #     if f_value > c_value:
+            #         st.success("The calculated F ratio is greater than the critical value.")
+            #         st.write("This suggests a significant difference between the groups.")
+            #         st.write("The observed differences are unlikely to be solely due to random variations or coincidences.")
+            #     else:
+            #         st.error("The calculated F ratio is not greater than the critical value.")
+            #         st.write("This suggests that there is not enough evidence to conclude a significant difference between the groups.")
+            #         st.write("The observed differences could reasonably be attributed to random variations or coincidences.")
 
-            with value_b:
-                if f_value > c_value:
-                    st.success("The calculated F ratio is greater than the critical value, the null hypothesis is rejected, and the result is considered statistically significant. This means that there is a significant difference between the means of the groups.")
-                else:
-                    st.error("The calculated F ratio is not greater than the critical value, the null hypothesis is not rejected, and the result is not considered statistically significant. This means that there is no significant difference between the means of the groups.")
-            
             st.write("")
+
             P1, SL2 = st.columns((1,5), gap="small")
             with P1:
-                    st.write("")
+                st.write("")
+                
             with SL2:
-                with st.expander("Understanding the Significance Level and P-value",expanded=False):   
-                    st.write("The p-value in ANOVA represents the probability that the differences between the groups are due to chance. A small p-value (usually less than 0.05) indicates that the differences between the groups are unlikely to be due to chance, and we can reject the null hypothesis that there is no difference between the groups. In other words, if the p-value is small, it suggests that there is a significant difference between at least two of the groups.")
+                with st.expander("Understanding the Significance Level and P-value", expanded=False):
+                    st.write("The p-value in ANOVA represents the probability that the differences between the groups are due to chance.")
+                    st.write("A small p-value (usually less than 0.05) indicates that the differences between the groups are unlikely to be due to chance, and we can reject the null hypothesis that there is no difference between the groups.")
+                    st.write("In other words, if the p-value is small, it suggests that there is a significant difference between at least two of the groups.")
                     st.write("")
-                    st.write("The significance level in ANOVA works in a similar way as in other statistical tests. We set a significance level, usually at 0.05, which represents the maximum probability of making a Type I error, which is rejecting the null hypothesis when it's actually true. If the p-value is less than the significance level, we reject the null hypothesis and conclude that there is a statistically significant difference between at least two of the groups.")
+                    st.write("The significance level in ANOVA works in a similar way as in other statistical tests.")
+                    st.write("We set a significance level, usually at 0.05, which represents the maximum probability of making a Type I error (rejecting the null hypothesis when it's actually true).")
+                    st.write("If the p-value is less than the significance level, we reject the null hypothesis and conclude that there is a statistically significant difference between at least two of the groups.")
                     st.write("")
-                    st.write("To give an analogy, imagine you are comparing the exam scores of three different classes to see if there is a significant difference between them. The null hypothesis would be that there is no significant difference in exam scores between the three classes, and the alternative hypothesis would be that there is a significant difference between at least two of the classes.")
+                    st.write("To give an analogy, imagine you are comparing the exam scores of three different classes to see if there is a significant difference between them.")
+                    st.write("The null hypothesis would be that there is no significant difference in exam scores between the three classes, and the alternative hypothesis would be that there is a significant difference between at least two of the classes.")
                     st.write("")
-                    st.write("You would conduct an ANOVA test and obtain a p-value of 0.02. This means that there is a 2% chance of observing the differences in exam scores between the three classes due to chance. Since the p-value is less than the significance level of 0.05, we reject the null hypothesis and conclude that there is a statistically significant difference in exam scores between at least two of the classes. This information could be useful in identifying areas for improvement or to make decisions about which class may need additional resources or attention.")
+                    st.write("You would conduct an ANOVA test and obtain a p-value of 0.02.")
+                    st.write("This means that there is a 2% chance of observing the differences in exam scores between the three classes due to chance.")
+                    st.write("Since the p-value is less than the significance level of 0.05, we reject the null hypothesis and conclude that there is a statistically significant difference in exam scores between at least two of the classes.")
+                    st.write("This information could be useful in identifying areas for improvement or making decisions about which class may need additional resources or attention.")
                     
             value_2a, value_2b = st.columns((1,5), gap="small")   
             with value_2a:
-                st.metric("P-value:",f"{p_value:.2f}")
-                st.metric("Significance level:",f"{100-p_value:.2f}")
-        
+                st.metric("P-value:", f"{p_value:.2f}")
+                st.metric("Significance level:", f"{100-p_value:.2f}")
+
             with value_2b:
                 if p_value < 0.05:
-                    st.success(f'* The result is statistically significant, which means that there is a less than 0.05 chance that the observed difference between the {dependent_column_name} of the different {independent_column_name} groups occurred by chance alone.')
-                    st.success(f'* The F-value is large, which indicates that there is a significant difference between the {dependent_column_name} of the different {independent_column_name} groups.')
-                    st.success(f'* This suggests that the {independent_column_name} has a significant effect on the {dependent_column_name}.')
+                    st.success(f'* With p-value of {p_value:.2f} that is less than 0.05, it means that the results for the relationship between "{independent_column_name}" and "{dependent_column_name}" are statistically significant.')
+
+                    st.write("There is a less than 5% chance that the observed difference between the groups happened due to natural differences alone.")
+                    st.write("This provides strong evidence that the independent variable has a significant impact on the dependent variable.")
                 else:
-                    st.error(f'* The result is not statistically significant, which means that there is a greater than or equal to 0.05 chance that the observed difference between the {dependent_column_name} of the different {independent_column_name} groups occurred by chance alone.')
-                    st.error(f'* The F-value is small, which indicates that there is not a significant difference between the {dependent_column_name} of the different {independent_column_name} groups.')
-                    st.error(f'* This suggests that the {independent_column_name} has no significant effect on the {dependent_column_name}.')
+                    st.warning(f'* With p-value of {p_value:.2f} that is greater than 0.05, it means that the results for the relationship between {independent_column_name} and {dependent_column_name} are not statistically significant.')
+                    st.write("There is a greater than or equal to 5% chance that the observed difference between the groups happened due to natural differences alone.")
+                    st.write("This suggests that the independent variable does not have a significant impact on the dependent variable.")   
 
             x = df_final[independent_column_name]
             y = df_final[dependent_column_name]
@@ -169,22 +176,21 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
             st.subheader("[🧪] Hypothesis Testing")
             if p_value <= 0.05:
                 result = "Reject Null Hypothesis"
-                conclusion = "There is sufficient evidence to suggest that {} is a factor on {}.".format(independent_column_name, dependent_column_name)
-                st.info("* P Value is {:.2f} which is less than or equal to 0.05 ({}); {}".format(p_value, result, conclusion))
+                conclusion = f"There is sufficient evidence to suggest that {independent_column_name} is a factor on {dependent_column_name}."
+                st.success(f"* P Value is {p_value:.2f} which is less than or equal to 0.05 ({result}); {conclusion}")
             else:
                 result = "Fail to Reject Null Hypothesis"
-                conclusion = "There is not sufficient evidence to suggest that {} is a factor on {}.".format(independent_column_name, dependent_column_name)
-                st.warning("* P Value is {:.2f} which is greater than to 0.05 ({}); {}".format(p_value, result, conclusion))
+                conclusion = f"There is not sufficient evidence to suggest that {independent_column_name} is a factor on {dependent_column_name}."
+                st.error(f"* P Value is {p_value:.2f} which is greater than to 0.05 ({result}); {conclusion}")
 
-            null_hypothesis = "The independent variable {} has no effect on the dependent variable {}.".format(independent_column_name, dependent_column_name)
-            alternate_hypothesis = "The independent variable {} has an effect on the dependent variable {}.".format(independent_column_name, dependent_column_name)
+            null_hypothesis = f"The independent variable {independent_column_name} has no effect on the dependent variable {dependent_column_name}."
+            alternate_hypothesis = f"The independent variable {independent_column_name} has an effect on the dependent variable {dependent_column_name}."
             st.write("\n\n")
             st.markdown(f"<span style='color: blue;'>Null Hypothesis (H0): </span> <span style='color: black;'>{null_hypothesis}</span>", unsafe_allow_html=True)
             st.markdown(f"<span style='color: blue;'>Alternate Hypothesis (H1): </span> <span style='color: black;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
 
             st.write("\n\n")
             st.markdown(f"<span style='color: black;'>If the p-value is less than or equal to 0.05, it means that the result is statistically significant and we reject the null hypothesis. This suggests that the independent variable </span> <span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'> has an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span>. <span style='color: black;'>On the other hand, if the p-value is greater than 0.05, it means that the result is not statistically significant and we fail to reject the null hypothesis. This suggests that the independent variable </span><span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'>not have an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span><span style='color: black;'>.</span>", unsafe_allow_html=True)
-
             colored_header(
             label="",
             description="",
@@ -201,11 +207,11 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
                     name="All Points",
                     jitter=0.3,
                     pointpos=-1.8,
-                    boxpoints='all', # represent all points
+                    boxpoints='all', 
                     marker_color='red',
                     line_color='black',
-                    marker_size=3, # increase the size of the plotted points
-                    line_width=2 # increase the line width
+                    marker_size=3, 
+                    line_width=2 
                 ))
 
                 fig.add_shape(
