@@ -12,7 +12,7 @@ from sklearn.metrics import f1_score
 from scipy.stats import linregress
 from sklearn.preprocessing import OneHotEncoder
 
-from functions import transformation_check, is_ordinal, load_lottiefile, load_lottieurl, get_sheet_names, normalize_numpy, filter_columns, transform_column, remove_file, download_csv
+from functions import is_ordinal, normalize_numpy, transform_column
 
 from streamlit_extras.colored_header import colored_header
 
@@ -23,15 +23,15 @@ def logistic_regression(data, file, column):
 
     data = data.select_dtypes(include=['object','float'])
     st.set_option('deprecation.showPyplotGlobalUse', False)
-    st.header("Logistic Regression")
+    st.header("🧮 Logistic Regression")
     
-    with st.expander("Logistic Regression?",expanded=True):   
-        #st.write("There are different types of logistic regression, such as binary, nominal and ordinal3, depending on the number and nature of the outcome categories.")
-        st.write("Binary logistic regression: The response variable can only belong to one of two categories, such as yes/no, pass/fail, etc.")
-        st.markdown("- x: can be continuous or categorical")
+    with st.expander("What is Logistic Regression?",expanded=True):   
+        
+        st.write("Binary logistic regression: is used to predict if something will happen or not. It's like guessing if it will rain tomorrow or not based on the weather today.")
         st.markdown("- y: is binary, meaning it can only take on two possible values, such as 0 or 1, yes or no, pass or fail")
+        st.markdown("- x: can be continuous or categorical (e.g. height and weight).")
         st.write("")
-        st.markdown("For example, you can use binary logistic regression to predict whether a student will pass a test (y) based on their study hours (x), which is a ratio-level variable.")               
+        st.markdown("For example, you can use binary logistic regression to predict whether a student will pass a test (y) based on their study hours (x).")               
         st.markdown('''
             <style>
             [data-testid="stMarkdownContainer"] ul{
@@ -46,12 +46,9 @@ def logistic_regression(data, file, column):
 
         file_name = file.name
 
-        # column_names = data.columns.tolist()
-        # x_col = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", column_names)
-
         column_names = data.columns.tolist()
         y_col = column
-        # Filter column names to only include continuous and categorical variables except binary
+
         filtered_column_names = []
         for col in column_names:
             if col != y_col:
@@ -62,7 +59,6 @@ def logistic_regression(data, file, column):
                     if data[col].nunique() > 2 or is_ordinal(data[col]):
                         filtered_column_names.append(col)
 
-        # Display the filtered column names in the selectbox
         x_col = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", filtered_column_names)
 
         if y_col == x_col:
@@ -86,26 +82,21 @@ def logistic_regression(data, file, column):
                     numeric_cols = data._get_numeric_data().columns
                     categorical_cols = data.columns.difference(numeric_cols)
 
-                    # Select numerical columns
                     num_cols = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
-                    # Identify columns that need normalization
+
                     needs_normalization = []
                     for col in numeric_cols:
                         z_scores = (data[col] - data[col].mean()) / data[col].std()
-                        if (z_scores.max() - z_scores.min()) > 3: # Check if the range of z-scores is greater than 3
+                        if (z_scores.max() - z_scores.min()) > 3:
                             needs_normalization.append(col)
 
-                    # Identify columns common in x, y, and needs_normalization
                     common_cols = set([x_col]).intersection(set(needs_normalization))
 
-                    # If there are common columns, use them as default values for multiselect
                     if common_cols:
                         default_values = list(common_cols)
                     else:
                         default_values = []
                     
-                    
-                    # Identify the data type of x_col column
                     x_col_type = None
                     if data[x_col].dtype == np.int64:
                         x_col_type = "integer"
@@ -114,7 +105,6 @@ def logistic_regression(data, file, column):
                     else:
                         x_col_type = "object"
 
-                    # Identify which columns are continuous, discrete, nominal, or ordinal
                     levels = {}
                     if x_col_type == "integer":
                         unique_values = data[x_col].nunique()
@@ -145,24 +135,16 @@ def logistic_regression(data, file, column):
                     elif levels[x_col] == "continuous":
                         recommended_method = "Z-Score"
                     else:
-                        data[x_col] = data[x_col].values.reshape(-1, 1) # Convert to 2D array
-                        
-                    # create the method selection box and set the default value to the recommended method
+                        data[x_col] = data[x_col].values.reshape(-1, 1) 
+
                     if recommended_method in ["One-Hot", "Ordinal", "Label"]:
-                        method = st.sidebar.selectbox(
-                            "👉 SELECT TRANSFORMATION METHOD (for selected 'x' field above):",
-                            # ("Frequency", "Label", "One-Hot", "Ordinal"),
-                            # index= ("Frequency", "Label", "One-Hot", "Ordinal").index(recommended_method)
-                            ("Label", "One-Hot", "Ordinal"),
-                            index= ("Label", "One-Hot", "Ordinal").index(recommended_method)
-                        )
+                        method = recommended_method
                         transformed_col = transform_column(data, x_col, method)
                         data[x_col] = transformed_col
                     else:
                         selected_cols = st.sidebar.multiselect("👉 COLUMN TO BE NORMALIZED (for selected 'y' field above):", needs_normalization, default=default_values)
-                             
                         data = data.copy()
-                        # Normalize selected columns
+      
                         if len(selected_cols) > 0:
                             method = "Z-Score"
                             numeric_selected_cols = [col for col in selected_cols if col in numeric_cols]
@@ -182,77 +164,50 @@ def logistic_regression(data, file, column):
                     with button:
                         st.write("")
                     
-                    #if st.button("Download CSV"):
-                    #    data = data.select_dtypes(include=['object','float','int'])
-                    #    now = datetime.datetime.now()
-                    #    date_string = now.strftime("%Y-%m-%d")
-                    #    # Set default save location to desktop
-                    #    desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
-                    #    save_path = os.path.join(desktop, f'logistic_filtered_data_csv_{date_string}.csv')
-                    #    # write data to the selected file
-                    #    data.to_csv(save_path, index=False)
-                    #    st.success(f'File saved successfully to {save_path}!')
-
-                    # Convert dataframe to NumPy array
                     X = data[x_col].to_numpy()
                     y = data[y_col].to_numpy()
 
-        
                     slope, intercept, r_value, p_value, std_err = linregress(X, y)    
                     
-                    # Check if X and y are 1D arrays
                     if len(X.shape) == 1:
-                        # Reshape X and y to 2D arrays
                         X = X.reshape(-1, 1)
-                        y = y.reshape(-1, 1)
+                    if len(y.shape) == 1:
+                        y = y.reshape(-1, 1).ravel()
 
-                    # Ask the user for the test size
                     test_size = st.sidebar.slider('5️⃣ CHOOSE LOGISTIC TEST SIZE:', 0.1, 0.5, 0.2)
 
-                    # Calculate the training size
                     training_size = 1 - test_size
 
-                    # Split the data into training and test sets
                     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size,random_state=0) #,random_state=0
 
-                    # Calculate the mean of Y
                     mean_y = np.mean(y_train)
 
-                    # Calculate the median of Y
                     median_y = np.median(y_train)
 
-                    # Calculate the mode of Y
                     mode_y = data[y_col].mode()[0]
 
-                    # Calculate the standard deviation of Y
                     std_y = np.std(y_train)
 
-                    # Get the sample size of the training set
                     training_set_size = X_train.shape[0]
 
-                    # Get the sample size of the test set
                     test_set_size = X_test.shape[0]
 
-                    # Write the sample sizes to the console or to the app 
                     st.sidebar.markdown(f"<span style='color: violet;'>➕ Training set size: </span> <span style='color: black;'>{training_set_size}</span>", unsafe_allow_html=True)
                     st.sidebar.markdown(f"<span style='color: violet;'>➕ Test set size: </span> <span style='color: black;'>{test_set_size}</span>", unsafe_allow_html=True)
-                    
-                    # Train the model
+
                     model = LogisticRegression()
                     model.fit(X_train, y_train)
 
-                    # Test the model
                     y_pred = model.predict(X_test)
 
-                    # Calculate evaluation metrics
                     accuracy = model.score(X_test, y_test)
                     cm = confusion_matrix(y_test, y_pred)
-                    precision = precision_score(y_test, y_pred)
+                    
+                    precision = precision_score(y_test, y_pred, zero_division=1)
                     
                     f1 = f1_score(y_test, y_pred)
                     recall = recall_score(y_test, y_pred)
-                   
-                    # Print evaluation metrics
+  
                     st.markdown("---")  
                     st.subheader("[✍] Logistic Regression Test")
                     st.write("\n")
@@ -278,22 +233,6 @@ def logistic_regression(data, file, column):
                             st.warning(f"* The model is performing decently, with an accuracy of more than 60% but less than 80%.")
                         else:
                             st.error(f"* The model is performing poorly, with an accuracy of less than 60%. An accuracy of less than 60% typically indicates that the model is making accurate predictions for a small proportion of the test instances and there is a significant need for improvement.")
-                    
-                    # st.write("Confusion Matrix:")
-                    # Matrix1a, Matrix2a = st.columns((1,5), gap="small")
-                    # with Matrix1a:
-                    #     df_cm = pd.DataFrame(cm, columns=['True', 'False'], index=['True', 'False'])
-                    #     #df_cm = df_cm.rename(index={'True': 'True Positive', 'False': 'False Negative'})
-                    #     #df_cm = df_cm.rename(columns={'True': 'False Positive', 'False': 'True Negative'})
-                    #     st.dataframe(df_cm)
-                    #     #st.write("")
-                    # with Matrix2a:
-                    #     if cm[1,1] > cm[0,0]:
-                    #         st.success(f"* The model is making more true positive predictions than true negative predictions. The model is making more correct predictions than incorrect predictions. This is generally a good thing, as it indicates that the model is able to accurately classify a large proportion of the test instances.")
-                    #     elif cm[1,1] < cm[0,0]:
-                    #         st.warning(f"* The model is making more true negative predictions than true positive predictions. The model is making more incorrect predictions than correct predictions. This is generally not a good thing, as it indicates that the model is having difficulty accurately classifying the test instances.")
-                    #     else:
-                    #         st.info(f"* The model is making an equal number of true positive and true negative predictions. The model is making an equal number of correct and incorrect predictions. This could indicate that the model is performing poorly.")
                     
                     st.write("\n")
                     F1, C1 = st.columns((1,5), gap="small")
@@ -359,8 +298,7 @@ def logistic_regression(data, file, column):
                             st.write("To give an analogy, imagine you are comparing the exam scores of three different classes to see if there is a significant difference between them. The null hypothesis would be that there is no significant difference in exam scores between the three classes, and the alternative hypothesis would be that there is a significant difference between at least two of the classes.")
                             st.write("")
                             st.write("You would conduct an ANOVA test and obtain a p-value of 0.02. This means that there is a 2% chance of observing the differences in exam scores between the three classes due to chance. Since the p-value is less than the significance level of 0.05, we reject the null hypothesis and conclude that there is a statistically significant difference in exam scores between at least two of the classes. This information could be useful in identifying areas for improvement or to make decisions about which class may need additional resources or attention.")
-                        
-                    # P-value
+
                     pvalue1a, pvalue2a = st.columns((1,5), gap="small")
                     with pvalue1a:
                         st.metric("P-value",f"{p_value:.2f}")        
@@ -383,8 +321,7 @@ def logistic_regression(data, file, column):
                             st.write("This is where the standard error comes in. It's like a measure of how much you might expect your score to vary if you took the same test over and over again. If the standard error is small, it means that your score is probably pretty accurate and you can be confident in it. But if the standard error is large, it means that your score is less reliable and could be off by quite a bit.")
                             st.write("")
                             st.write("In a similar way, the standard error in a simple linear regression is a measure of how much you might expect the slope of the regression line to vary if you took different samples from the same population. If the standard error is small, it means that the slope of the regression line is probably a good estimate of the true population slope and you can be confident in it. But if the standard error is large, it means that the slope of the regression line is less reliable and could be off by quite a bit.")
-                        
-                    # Standard error
+
                     std1a, std2a = st.columns((1,5), gap="small")
                     with std1a:
                         st.metric("Standard Error",f"{std_err:.2f}")  
@@ -392,11 +329,10 @@ def logistic_regression(data, file, column):
                     with std2a:
                         st.info(f'* The standard error is {std_err:.2f}, it measures the accuracy of the estimate of the slope, a smaller standard error means that the estimate of the slope is more accurate.')
                     
-
                     st.write("\n")
                     st.subheader("[📝] Descriptive Statistics for Y")
                     st.write("\n")
-                    #st.write(f'Mean: {mean_y:.2f}')
+
                     mean1a, mean2a = st.columns((1,5), gap="small")
                     with mean1a:
                         st.metric("Mean:",f"{mean_y:.2f}")
@@ -455,7 +391,6 @@ def logistic_regression(data, file, column):
                         conclusion = "There is not sufficient evidence to suggest that {} is a factor on {}.".format(x_col, y_col)
                         st.warning("* P Value is {:.2f} which is greater than to 0.05 ({}); {}".format(p_value, result, conclusion))
 
-                    # Add null and alternate hypothesis statements
                     null_hypothesis = "The independent variable {} has no effect on the dependent variable {}.".format(x_col, y_col)
                     alternate_hypothesis = "The independent variable {} has an effect on the dependent variable {}.".format(x_col, y_col)
                     st.write("\n\n")
