@@ -32,7 +32,7 @@ import plotly.express as px
 import webbrowser
 import time
 
-st.set_page_config(page_title="INFER-X (Local-updated 042523)", layout='wide', initial_sidebar_state='expanded', page_icon="👁️‍🗨️")
+st.set_page_config(page_title="INFER-X (Local-updated 060123)", layout='wide', initial_sidebar_state='expanded', page_icon="👁️‍🗨️")
 
 
 lottie_hacking = load_lottiefile("lottiefiles/hacker.json")
