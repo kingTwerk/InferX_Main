@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd
 import streamlit_pandas_profiling as spp
 import streamlit as st
-from streamlit_lottie import st_lottie
-from streamlit_extras.colored_header import colored_header
 import json
 import requests
 import category_encoders as ce
@@ -13,16 +11,14 @@ import base64
 import os
 import ydata_profiling as yd
 from streamlit_pandas_profiling import st_profile_report
-#from sklearn.preprocessing import BinaryEncoder
-
+import openpyxl
 
 #@st.experimental_memo
 @st.cache_data
 def is_ordinal(data):
-    try:
-        cat_data = pd.Categorical(data)
-        return cat_data.ordered
-    except ValueError:
+    if pd.api.types.is_categorical_dtype(data):
+        return data.cat.ordered
+    else:
         return False
 
 def load_lottiefile(filepath: str):
@@ -36,8 +32,8 @@ def load_lottieurl(url: str):
     return r.json()
 
 def get_sheet_names(file):
-    xl = pd.read_excel(file, sheet_name=None)
-    sheet_names = list(xl.keys())
+    wb = openpyxl.load_workbook(file, read_only=True)
+    sheet_names = [sheet.title for sheet in wb.worksheets]
     return sheet_names
 
 def normalize_numpy(df, numeric_cols, categorical_cols, method='Z-Score'):
@@ -74,9 +70,10 @@ def filter_columns(df_final, filter_checkbox):
         columns = df_final.columns.tolist()
         selected_columns = st.sidebar.multiselect("👉 COLUMN: Select which column/s to filter:", columns)
         if selected_columns:
+            datetime_columns = df_final.select_dtypes(include=['datetime64']).columns.tolist()
             for selected_column in selected_columns:
-                if df_final[selected_column].dtype == 'datetime64[ns]':
-                    df_final[selected_column] = df_final[selected_column].dt.strftime('%Y-%m-%d')
+                if selected_column in datetime_columns:
+                    df_final[selected_column] = df_final[selected_column].dt.date.strftime('%Y-%m-%d')
                 filter_values = sorted(df_final[selected_column].unique().tolist())
                 filter_values = st.sidebar.multiselect("👉 EXCLUDE: Select filter values for {}".format(selected_column), filter_values)
                 if filter_values:
@@ -85,30 +82,24 @@ def filter_columns(df_final, filter_checkbox):
     return df_final
 
 def transform_column(df_final, col_name, method='Ordinal'):
-    # Define dictionary of encoding methods
+
     encoding_dict = {
         'Label': lambda df_final, col_name: LabelEncoder().fit_transform(df_final[col_name]),
         'One-Hot': lambda df_final, col_name: OneHotEncoder(sparse=False, handle_unknown='ignore').fit_transform(df_final[[col_name]]),
         'Binary': lambda df_final, col_name: Binarizer(threshold=0.0).fit_transform(df_final[[col_name]]),
         'Ordinal': lambda df_final, col_name: OrdinalEncoder().fit_transform(df_final[[col_name]]),
-        #'Count': lambda df_final, col_name: df_final.groupby(col_name).size().reset_index(name=f'{col_name}_count')[f'{col_name}_count'],
-        #'Count': lambda df_final, col_name: df_final.groupby(col_name).size().reset_index(name=f'{col_name}_count'),
         'Count': lambda df_final, col_name: df_final[col_name].map(df_final[col_name].value_counts()),
-        #'Hashing': lambda df_final, col_name: FeatureHasher(n_features=10, input_type='string').transform(df_final[[col_name]].astype(str)).toarray(),
-        #'Hashing': lambda df_final, col_name: ce.HashingEncoder(n_components=10).fit_transform(df_final[col_name]),
-    
         'Frequency': lambda df_final, col_name: df_final[col_name].map(df_final[col_name].value_counts()).fillna(0)
     }
-    # Select encoding method
     encoder = encoding_dict[method]
-    # Apply encoding to column
+
     if method == 'Binary' and df_final[col_name].dtype != 'object':
-        # Only apply binary encoding to numeric columns
+     
         df_final = encoder(df_final, col_name)
         df_final.columns = [f'{col_name}_binarized']
     else:
         df_final[col_name] = encoder(df_final, col_name)
-    # Return transformed column
+
     return df_final[col_name]
 
 def download_csv(file_name):
@@ -127,26 +118,11 @@ def remove_file(file_name):
 def transformation_check(df_final, isNumerical, column, test):
 
     if isNumerical[df_final.columns.get_loc(column)] == 'Categorical' and (test == 'CHI-SQUARE' or test == 'ANOVA'):
-        # get the type of the selected column
-        levels = np.empty(df_final.shape[1], dtype=object) 
-        for i, col in enumerate(df_final.columns):  
-            if df_final[col].dtype == np.int64 or df_final[col].dtype == np.float64:
-                if df_final[col].dtype == np.int64:
-                    levels[i] = "Discrete"
-                else:
-                    levels[i] = "Continuous"
-            elif df_final[col].dtype == object:
-                if df_final[col].nunique() == 2:
-                    levels[i] = "Binary"
-                else:
-                    if is_ordinal(df_final[col]):
-                        levels[i] = "Ordinal"
-                    else:
-                        levels[i] = "Nominal"
-            else:
-                levels[i] = "Nominal"
+       
+        numerical_columns = df_final.select_dtypes(include=['int64', 'float64']).columns.tolist()
+        levels = ['Discrete' if pd.api.types.is_integer_dtype(df_final[col]) else 'Continuous' for col in numerical_columns]
+        levels += ['Binary' if df_final[col].nunique() == 2 else 'Ordinal' if is_ordinal(df_final[col]) else 'Nominal' for col in df_final.columns if col not in numerical_columns]
 
-        # determine the recommended transformation method based on the column type
         column_index = df_final.columns.get_loc(column)
         if levels[column_index] == "Nominal" and len(df_final[column].unique()) > 2:
             recommended_method = "One-Hot"
@@ -157,26 +133,13 @@ def transformation_check(df_final, isNumerical, column, test):
         else:
             recommended_method = None
 
-        # create the method selection box and set the default value to the recommended method
         if recommended_method:
-            method = st.sidebar.selectbox(
-                "👉 SELECT TRANSFORMATION METHOD (for selected 'y' field above):",
-                #("Frequency", "Label", "One-Hot", "Ordinal"),
-                #index= ("Frequency", "Label", "One-Hot", "Ordinal").index(recommended_method)
-                ("Label", "One-Hot", "Ordinal"),
-                index= ("Label", "One-Hot", "Ordinal").index(recommended_method)
-            )
+            method = recommended_method
         else:
-            method = st.sidebar.selectbox(
-                "👉 SELECT TRANSFORMATION METHOD (for selected 'y' field above):",
-                #("Frequency", "Label", "One-Hot", "Ordinal"),
-                ("Label", "One-Hot", "Ordinal"),
-                index=0
-            )
+            method = "Label"
 
         transformed_col = transform_column(df_final, column, method)
 
         df_final[column] = transformed_col
 
         return df_final
-
