@@ -110,7 +110,7 @@ def anova(df_final, file, column):
                     df_final[independent_column_name] = transformed_col
 
                     st.subheader("[👁️‍🗨️] Data Preview:")
-                    st.dataframe(df_final, height = 200)
+                    st.dataframe(df_final, height = 400)
 
                     button,anova_row, anova_col = st.columns((0.0001,1.5,4.5), gap="small")
                     rows = df_final.shape[0]
@@ -130,5 +130,3 @@ def anova(df_final, file, column):
                     
                 elif (pd.api.types.is_string_dtype(df_final[dependent_column_name])):
                     st.error(f'❌ SELECTION ERROR #5: {dependent_column_name} column might contain categorical/string variables, please select a quantitative column.')
-
-                
