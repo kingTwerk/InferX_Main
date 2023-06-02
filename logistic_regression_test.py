@@ -21,7 +21,7 @@ import datetime
 
 def logistic_regression(data, file, column):
 
-    data = data.select_dtypes(include=['object','float'])
+    data = data.select_dtypes(include=['object','float','int'])
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.header("🧮 Logistic Regression")
     
