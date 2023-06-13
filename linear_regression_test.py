@@ -38,9 +38,9 @@ def linear_regression(data, file,column):
         rows = data.shape[0]
         cols = data.shape[1]
         with slr_row:
-            st.markdown(f"<span style='color: violet;'>➕ # of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: violet;'>➕ Number of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
         with slr_col:
-            st.markdown(f"<span style='color: violet;'>➕ # of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: violet;'>➕ Number of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
         with button:
             st.write("")
 
@@ -124,31 +124,31 @@ def linear_regression(data, file,column):
                         #sum_xy = np.sum((X-mean_x)*(y-mean_y))
                         #sum_x2 = np.sum( (X-mean_x)**2)
                         
-                        st.write("\n")
-                        st.subheader("[✍] Linear Regression Test")
-                        st.write("\n")
-                        with st.expander("The Importance of Slope", expanded=False):
-                            st.write("In linear regression analysis, the slope plays a crucial role in understanding the relationship between two variables. When we draw a straight line through the data points, the slope represents how much one variable changes when the other variable changes by one unit.")
+                        # st.write("\n")
+                        # st.subheader("[✍] Linear Regression Test")
+                        # st.write("\n")
+                        # with st.expander("The Importance of Slope", expanded=False):
+                        #     st.write("In linear regression analysis, the slope plays a crucial role in understanding the relationship between two variables. When we draw a straight line through the data points, the slope represents how much one variable changes when the other variable changes by one unit.")
 
-                            st.write("To illustrate this concept, let's consider the relationship between studying time and grades. If the slope is positive, it indicates that as students increase their studying time, their grades tend to go up. On the other hand, if the slope is negative, it suggests that as studying time increases, grades tend to decrease.")
+                        #     st.write("To illustrate this concept, let's consider the relationship between studying time and grades. If the slope is positive, it indicates that as students increase their studying time, their grades tend to go up. On the other hand, if the slope is negative, it suggests that as studying time increases, grades tend to decrease.")
 
-                            st.write("The slope provides valuable insights into the strength and direction of the relationship between the variables being analyzed. A larger magnitude of the slope indicates a stronger relationship between the variables, while a slope close to zero suggests a weak or negligible relationship. Additionally, the slope allows us to make predictions based on the linear regression model.")
-                            st.write("For example, by knowing the slope and the studying time, we can estimate a student's expected grade.")
+                        #     st.write("The slope provides valuable insights into the strength and direction of the relationship between the variables being analyzed. A larger magnitude of the slope indicates a stronger relationship between the variables, while a slope close to zero suggests a weak or negligible relationship. Additionally, the slope allows us to make predictions based on the linear regression model.")
+                        #     st.write("For example, by knowing the slope and the studying time, we can estimate a student's expected grade.")
 
-                            st.write("Understanding the slope in linear regression helps us gain valuable insights into the relationship between variables and enables us to make informed predictions and decisions.")
-                            st.write("It is a fundamental aspect of linear regression analysis and serves as a valuable tool in various fields, such as predicting sales based on advertising spending or estimating the impact of a policy change on economic outcomes.")
+                        #     st.write("Understanding the slope in linear regression helps us gain valuable insights into the relationship between variables and enables us to make informed predictions and decisions.")
+                        #     st.write("It is a fundamental aspect of linear regression analysis and serves as a valuable tool in various fields, such as predicting sales based on advertising spending or estimating the impact of a policy change on economic outcomes.")
 
-                        st.metric("Slope", f"{slope:.2f}")
+                        # st.metric("Slope", f"{slope:.2f}")
 
-                        if slope > 0:
-                            st.success(f' With a positive slope of {slope:.2f}, there is a positive relationship between the {x_column_name} and {y_column_name} variables.')
-                            st.write(f' This means that as the {x_column_name} variable increases, the {y_column_name} variable is also likely to increase.')
-                        elif slope < 0:
-                            st.warning(f' With a negative slope of {slope:.2f}, there is a negative relationship between the {x_column_name} and {y_column_name} variables.')
-                            st.write(f' This means that as the {x_column_name} variable increases, the {y_column_name} variable is likely to decrease.')
-                        else:
-                            st.error(f' With a slope of {slope:.2f}, there is no relationship between the {x_column_name} and {y_column_name} variables.')
-                            st.write(f' This means that the {x_column_name} variable does not have an impact on the {y_column_name} variable.')
+                        # if slope > 0:
+                        #     st.success(f' With a positive slope of {slope:.2f}, there is a positive relationship between the {x_column_name} and {y_column_name} variables.')
+                        #     st.write(f' This means that as the {x_column_name} variable increases, the {y_column_name} variable is also likely to increase.')
+                        # elif slope < 0:
+                        #     st.warning(f' With a negative slope of {slope:.2f}, there is a negative relationship between the {x_column_name} and {y_column_name} variables.')
+                        #     st.write(f' This means that as the {x_column_name} variable increases, the {y_column_name} variable is likely to decrease.')
+                        # else:
+                        #     st.error(f' With a slope of {slope:.2f}, there is no relationship between the {x_column_name} and {y_column_name} variables.')
+                        #     st.write(f' This means that the {x_column_name} variable does not have an impact on the {y_column_name} variable.')
 
                         st.write("\n")
 
@@ -195,8 +195,8 @@ def linear_regression(data, file,column):
                         null_hypothesis = "The independent variable {} has no effect on the dependent variable {}.".format(x_column_name, y_column_name)
                         alternate_hypothesis = "The independent variable {} has an effect on the dependent variable {}.".format(x_column_name, y_column_name)
                         st.write("\n\n")
-                        st.markdown(f"<span style='color: blue;'>Null Hypothesis (H0): </span> <span style='color: black;'>{null_hypothesis}</span>", unsafe_allow_html=True)
-                        st.markdown(f"<span style='color: blue;'>Alternate Hypothesis (H1): </span> <span style='color: black;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: blue; font-weight: bold;'>Null Hypothesis (H0): </span> <span style='color: black;'>{null_hypothesis}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: blue; font-weight: bold;'>Alternate Hypothesis (H1): </span> <span style='color: black;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
 
                         st.write("\n\n")
                         st.markdown(f"<span style='color: black;'>If the p-value is less than or equal to 0.05, it means that the result is statistically significant and we reject the null hypothesis. This suggests that the independent variable </span> <span style='color: blue;'>({x_column_name})</span> <span style='color: black;'> has an effect on the dependent variable </span> <span style='color: blue;'>({y_column_name})</span>. <span style='color: black;'>On the other hand, if the p-value is greater than 0.05, it means that the result is not statistically significant and we fail to reject the null hypothesis. This suggests that the independent variable </span><span style='color: blue;'>({x_column_name})</span> <span style='color: black;'>not have an effect on the dependent variable </span> <span style='color: blue;'>({y_column_name})</span><span style='color: black;'>.</span>", unsafe_allow_html=True)
@@ -243,7 +243,7 @@ def linear_regression(data, file,column):
                             y_pred = model.predict(X)
 
                             st.write("\n")
-                            st.subheader("[📝] Descriptive Statistics for Y")
+                            st.subheader(f"[📝] Descriptive Statistics for 'Y' ({y_column_name})")
                             st.write("\n")
 
                             mean, median, mode, std_dev = st.columns((2.5,2.5,2.5,2.5), gap="small")
@@ -267,7 +267,7 @@ def linear_regression(data, file,column):
                                 st.info(" The standard deviation is a measure of how spread out the values are from the mean. A low standard deviation indicates that the values tend to be close to the mean, while a high standard deviation indicates that the values are spread out over a wider range.")
 
                             st.write("\n")
-                            st.subheader("[💡] Insight Statistics for Y")
+                            st.subheader(f"[💡] Insight Statistics for 'Y' ({y_column_name})")
                             st.write("\n")
                             if mean_y > median_y:
                                 st.write(f' The mean is higher than the median, which suggests that the data is skewed to the right.')
