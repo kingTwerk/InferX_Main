@@ -32,7 +32,7 @@ import plotly.express as px
 import webbrowser
 import time
 
-st.set_page_config(page_title="INFER-X (Local-updated 060123)", layout='wide', initial_sidebar_state='expanded', page_icon="👁️‍🗨️")
+st.set_page_config(page_title="INFER-X (Local-updated 042523)", layout='wide', initial_sidebar_state='expanded', page_icon="👁️‍🗨️")
 
 
 lottie_hacking = load_lottiefile("lottiefiles/hacker.json")
@@ -43,7 +43,7 @@ st.markdown(""" <style>
 footer {visibility: hidden;}
 </style> """, unsafe_allow_html=True)
 
-st.title("🕵🏽 Inferential Statistical Tests Recommender (INFER-X)") 
+st.title("🕵🏽 Inferential Statistical Tests") 
 # st.markdown(""" <style> .font {                                          
 # font-size:30px ; font-family: 'Cooper Black'; color: #FF9620;} 
 # </style> """, unsafe_allow_html=True)
@@ -92,15 +92,15 @@ def main():
                 if df.shape[0] == 0:
                     st.sidebar.warning("WARNING: The selected file or sheet is empty.")
             
-            button, xl_drop_row, xl_drop_col = st.columns((0.0001,1.5,4.5), gap="small")
+            # button, xl_drop_row, xl_drop_col = st.columns((0.0001,1.5,4.5), gap="small")
             
-            xldrop_rows = df.shape[0]
-            xldrop_cols = df.shape[1]
+            # xldrop_rows = df.shape[0]
+            # xldrop_cols = df.shape[1]
 
-            with xl_drop_row:
-                st.markdown(f"<span style='color: blue;'>➕ Original # of rows : </span> <span style='color: black;'>{xldrop_rows}</span>", unsafe_allow_html=True)
-            with xl_drop_col:
-                st.markdown(f"<span style='color: blue;'>➕ Original # of columns : </span> <span style='color: black;'>{xldrop_cols}</span>", unsafe_allow_html=True)
+            # with xl_drop_row:
+            #     st.markdown(f"<span style='color: blue;'>➕ Original # of rows : </span> <span style='color: black;'>{xldrop_rows}</span>", unsafe_allow_html=True)
+            # with xl_drop_col:
+            #     st.markdown(f"<span style='color: blue;'>➕ Original # of columns : </span> <span style='color: black;'>{xldrop_cols}</span>", unsafe_allow_html=True)
 
             st.sidebar.title("👟 Infer-X Steps:") 
 
