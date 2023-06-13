@@ -7,7 +7,7 @@ from scipy.stats import f
 
 def anova_result(df_final, independent_column_name, dependent_column_name, file, column):
      
-    st.subheader("[✍] ANOVA Test")
+    st.subheader("[✍] One-Way ANOVA")
     
     ind_col_data = df_final[independent_column_name].values
     dep_col_data = df_final[dependent_column_name].values
@@ -103,8 +103,8 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
             null_hypothesis = f"The independent variable {independent_column_name} has no effect on the dependent variable {dependent_column_name}."
             alternate_hypothesis = f"The independent variable {independent_column_name} has an effect on the dependent variable {dependent_column_name}."
             st.write("\n\n")
-            st.markdown(f"<span style='color: blue;'>Null Hypothesis (H0): </span> <span style='color: black;'>{null_hypothesis}</span>", unsafe_allow_html=True)
-            st.markdown(f"<span style='color: blue;'>Alternate Hypothesis (H1): </span> <span style='color: black;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: blue; font-weight: bold;'>Null Hypothesis (H0): </span> <span style='color: black;'>{null_hypothesis}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: blue; font-weight: bold;'>Alternate Hypothesis (H1): </span> <span style='color: black;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
 
             st.write("\n\n")
             st.markdown(f"<span style='color: black;'>If the p-value is less than or equal to 0.05, it means that the result is statistically significant and we reject the null hypothesis. This suggests that the independent variable </span> <span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'> has an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span>. <span style='color: black;'>On the other hand, if the p-value is greater than 0.05, it means that the result is not statistically significant and we fail to reject the null hypothesis. This suggests that the independent variable </span><span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'>not have an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span><span style='color: black;'>.</span>", unsafe_allow_html=True)
@@ -127,7 +127,7 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
             description="",
             color_name="violet-70",
             )
-            st.subheader("[📝] Descriptive Statistics for Y")
+            st.subheader(f"[📝] Descriptive Statistics for 'Y' ({dependent_column_name}) ")
             st.write("\n")
 
             mean1a, median1a, mode1a, std1a = st.columns((2.5,2.5,2.5,2.5), gap="small")
@@ -158,7 +158,7 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
             with Sstd1a:    
                 st.info(" The standard deviation is a measure of how spread out the values are from the mean. A low standard deviation indicates that the values tend to be close to the mean, while a high standard deviation indicates that the values are spread out over a wider range.")
 
-            st.subheader("[💡] Insight Statistics for Y")
+            st.subheader(f"[💡] Insight Statistics for 'Y' ({dependent_column_name})")
             st.write("\n")   
             
             if meanY > medianY:
