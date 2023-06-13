@@ -9,7 +9,7 @@ from functions import is_ordinal, normalize_numpy, transform_column
 def anova(df_final, file, column):
 
         st.set_option('deprecation.showPyplotGlobalUse', False)
-        st.header('🧮 Analysis of variance (ANOVA)')
+        st.header('🧮 One-Way ANOVA')
         st.write("\n")
         
         with st.expander("What is One-way ANOVA?",expanded=True):   
@@ -116,9 +116,9 @@ def anova(df_final, file, column):
                     rows = df_final.shape[0]
                     cols = df_final.shape[1]
                     with anova_row:
-                        st.markdown(f"<span style='color: violet;'>➕ # of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: violet;'>➕ Number of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
                     with anova_col:
-                        st.markdown(f"<span style='color: violet;'>➕ # of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: violet;'>➕ Number of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
 
                     colored_header(
                         label="",
