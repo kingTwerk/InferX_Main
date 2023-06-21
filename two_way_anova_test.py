@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import pingouin as pg
 from streamlit_extras.colored_header import colored_header
 from scipy.stats import f
 from two_way_anova_test_results import two_anova_result
