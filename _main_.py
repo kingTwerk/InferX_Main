@@ -270,7 +270,7 @@ def main():
                         color_name="violet-70",
                         )   
                     st.subheader("[🔍] Variable Insights:")
-                    tab1, tab2, tab3, tab4, tab5, tab6, tab7= st.tabs(["Ⅰ.┊NEEDS NORMALIZATION┊","Ⅱ.┊MEASUREMENT TYPES┊","Ⅲ.┊TEST SUGGESTIONS┊", "Ⅳ.┊LEVELS OF MEASUREMENTS┊", "Ⅴ.┊VARIABLE TYPES┊","Ⅵ.┊ALL TEST SUGGESTIONS┊","Ⅶ.┊UNIQUE VARIABLE┊","Ⅷ.┊PANDAS DTYPE┊"])
+                    tab1, tab2, tab3, tab4, tab5, tab6, tab7= st.tabs(["Ⅰ.┊NEEDS NORMALIZATION┊","Ⅱ.┊MEASUREMENT TYPES┊","Ⅲ.┊TEST SUGGESTIONS┊", "Ⅳ.┊LEVELS OF MEASUREMENTS┊", "Ⅴ.┊VARIABLE TYPES┊","Ⅵ.┊ALL TEST SUGGESTIONS┊","Ⅶ.┊UNIQUE VARIABLE┊"])
                     if not column:
                         st.write("")
                     #with tab8:
