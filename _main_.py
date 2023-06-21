@@ -270,12 +270,12 @@ def main():
                         color_name="violet-70",
                         )   
                     st.subheader("[🔍] Variable Insights:")
-                    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Ⅰ.┊NEEDS NORMALIZATION┊","Ⅱ.┊MEASUREMENT TYPES┊","Ⅲ.┊TEST SUGGESTIONS┊", "Ⅳ.┊LEVELS OF MEASUREMENTS┊", "Ⅴ.┊VARIABLE TYPES┊","Ⅵ.┊ALL TEST SUGGESTIONS┊","Ⅶ.┊UNIQUE VARIABLE┊","Ⅷ.┊PANDAS DTYPE┊"])
+                    tab1, tab2, tab3, tab4, tab5, tab6, tab7= st.tabs(["Ⅰ.┊NEEDS NORMALIZATION┊","Ⅱ.┊MEASUREMENT TYPES┊","Ⅲ.┊TEST SUGGESTIONS┊", "Ⅳ.┊LEVELS OF MEASUREMENTS┊", "Ⅴ.┊VARIABLE TYPES┊","Ⅵ.┊ALL TEST SUGGESTIONS┊","Ⅶ.┊UNIQUE VARIABLE┊","Ⅷ.┊PANDAS DTYPE┊"])
                     if not column:
                         st.write("")
-                    with tab8:
-                        for i, (col_name, dtype) in enumerate(df_final.dtypes.iteritems(), start=1):
-                            st.write(f"{i}.&nbsp; <font color='blue'>{col_name}</font>: {dtype}", unsafe_allow_html=True)
+                    #with tab8:
+                    #    for i, (col_name, dtype) in enumerate(df_final.dtypes.iteritems(), start=1):
+                    #        st.write(f"{i}.&nbsp; <font color='blue'>{col_name}</font>: {dtype}", unsafe_allow_html=True)
                         
                     with tab7:
                         for i, option in enumerate(column_options, start=1):
