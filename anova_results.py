@@ -3,66 +3,50 @@ import plotly.graph_objects as go
 from streamlit_extras.colored_header import colored_header
 from scipy.stats import f_oneway
 from scipy.stats import f
+from scipy.stats import ttest_ind
+import statsmodels.api as sm
+import pingouin as pg
+import scipy.stats as stats
+from scipy.stats import pearsonr
 
+from pingouin import anova
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
 
 def anova_result(df_final, independent_column_name, dependent_column_name, file, column):
      
-    st.subheader("[✍] One-Way ANOVA")
+    st.subheader("One-Way ANOVA")
     
-    ind_col_data = df_final[independent_column_name].values
-    dep_col_data = df_final[dependent_column_name].values
+    #ind_col_data = df_final[independent_column_name].values
+    #dep_col_data = df_final[dependent_column_name].values
 
     try:
-        result = f_oneway(ind_col_data, dep_col_data)
+        # OLD
+        #result = f_oneway(ind_col_data, dep_col_data)
+        #f_value = result.statistic
+        #p_value = result.pvalue
 
-        f_value = result.statistic
+        #alpha = 0.05
+        #k = len(df_final[independent_column_name].unique())
+        #dfn = k-1
 
-        p_value = result.pvalue
+        #n = len(df_final)
+        #dfd = n-k
+        #c_value = f.ppf(1-alpha, dfn, dfd)   
 
-        alpha = 0.05
-        k = len(df_final[independent_column_name].unique())
-        dfn = k-1
+        # NEW
+        groups = df_final.groupby(independent_column_name)[dependent_column_name].apply(list)
+        groupsf_value, groupsp_value = stats.f_oneway(*groups)
+        # st.write(f"Dependent Variable: {dependent_column_name}")
+        # st.write(f"Independent Variable: {independent_column_name}")
+        # st.write("p-value:", round(groupsp_value, 3))
+        # st.write("F-value:", round(groupsf_value, 3))
 
-        n = len(df_final)
-        dfd = n-k
-        c_value = f.ppf(1-alpha, dfn, dfd)   
-
-        if f_value == float('inf'):
+        if groupsf_value == float('inf'):
             st.success(f'* The F-value is not defined because one of the groups has a variance of 0 or the groups have a very large difference in sample size.')
             st.error(f'* The ANOVA test is not appropriate to use and other statistical tests should be considered.')
         else:
             st.write("\n")
-            # F1, C1 = st.columns((1,5), gap="small")
-            # with F1:
-            #     st.write("")
-            # with C1:
-            #     with st.expander("Understanding the F-Statistic and Critical Value",expanded=False):   
-            #         st.write("The F-statistic is a measure of how much the variance between the group means differs from the variance within the groups. If the group means are all equal (as in the null hypothesis), then the F-statistic will be close to 1. However, if the group means are not equal, then the F-statistic will be larger.")
-            #         st.write("")
-            #         st.write("The F-statistic is compared to a critical value to determine whether to reject or fail to reject the null hypothesis. The critical value is determined based on the degrees of freedom (df) associated with the test. The df are calculated based on the number of groups being compared and the sample size.")
-            #         st.write("")
-            #         st.write("An analogy for the F-statistic and critical value in an ANOVA test could be a baking competition. Imagine you're judging a competition where three contestants have each made a cake. You want to determine if there is a significant difference in the average taste score between the three cakes.")
-            #         st.write("")
-            #         st.write("The F-statistic would be like a score that tells you how much the average taste score differs between the three cakes, relative to the variation in taste scores within each cake. If all of the cakes tasted the same, then the F-statistic would be close to 1. But if one cake tastes significantly better than the others, the F-statistic would be higher.")
-            #         st.write("")
-            #         st.write("The critical value would be like a threshold you set before judging the competition. If the F-statistic exceeds the critical value, you'll conclude that there is a significant difference in taste between the three cakes. However, if the F-statistic falls below the critical value, you'll conclude that there is not a significant difference in taste between the cakes.")
-            #         st.write("")
-            #         st.write("In summary, the F-statistic and critical value in an ANOVA test help us determine whether there is a significant difference between the means of three or more groups.")
-                     
-            # value_a, value_b = st.columns((1,5), gap="small")                        
-            # with value_a:
-            #     st.metric("F-stat:", f"{f_value:.2f}")
-            #     st.metric("Critical-value:", f"{c_value:.2f}")
-
-            # with value_b:
-            #     if f_value > c_value:
-            #         st.success("The calculated F ratio is greater than the critical value.")
-            #         st.write("This suggests a significant difference between the groups.")
-            #         st.write("The observed differences are unlikely to be solely due to random variations or coincidences.")
-            #     else:
-            #         st.error("The calculated F ratio is not greater than the critical value.")
-            #         st.write("This suggests that there is not enough evidence to conclude a significant difference between the groups.")
-            #         st.write("The observed differences could reasonably be attributed to random variations or coincidences.")
 
             with st.expander("Understanding the Significance Level and P-value", expanded=False):
                 st.write("In ANOVA (Analysis of Variance), the significance level and p-value are important measures used to determine if there are statistically significant differences between groups.")
@@ -76,38 +60,39 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
                 st.write("Understanding the significance level and p-value helps us make informed decisions and draw meaningful conclusions from ANOVA results. It can provide insights into group differences and guide further analysis or decision-making processes, such as identifying areas for improvement or allocating resources to specific groups.")
             
             st.write("\n")
-            value_2a, value_2b = st.columns((1,5), gap="small")   
-            with value_2a:
-                st.metric("P-value:", f"{p_value:.2f}")
-            with value_2b:
-                st.metric("Significance level:", f"{100-p_value:.2f}")
 
-            if p_value < 0.05:
-                st.success(f' With p-value of {p_value:.2f} that is less than 0.05, it means that the results for the relationship between "{independent_column_name}" and "{dependent_column_name}" are statistically significant.')
+            value_2a, value_2b = st.columns((2,5), gap="small")   
+            with value_2a:
+                st.metric("P-value:", f"{groupsp_value:.3f}")
+            with value_2b:
+                st.metric("Significance level:", f"{100-groupsp_value:.3f}")
+
+            if groupsp_value < 0.05:
+                st.success(f' With p-value of {groupsp_value:.3f} that is less than 0.05, it means that the results for the relationship between "{independent_column_name}" and "{dependent_column_name}" are statistically significant.')
                 st.write("There is a less than 5% chance that the observed difference between the groups happened due to natural differences alone. This provides strong evidence that the independent variable has a significant impact on the dependent variable.")
             else:
-                st.error(f' With p-value of {p_value:.2f} that is greater than 0.05, it means that the results for the relationship between {independent_column_name} and {dependent_column_name} are not statistically significant.')
+                st.error(f' With p-value of {groupsp_value:.3f} that is greater than 0.05, it means that the results for the relationship between "{independent_column_name}" and "{dependent_column_name}" are not statistically significant.')
                 st.write("There is a greater than or equal to 5% chance that the observed difference between the groups happened due to natural differences alone.This suggests that the independent variable does not have a significant impact on the dependent variable.")   
 
             st.write("\n")
-            st.subheader("[🧪] Hypothesis Testing")
-            if p_value <= 0.05:
+            st.subheader("Hypothesis Testing")
+            if groupsp_value <= 0.05:
                 result = "Reject Null Hypothesis"
                 conclusion = f"There is sufficient evidence to suggest that {independent_column_name} is a factor on {dependent_column_name}."
-                st.success(f" P Value is {p_value:.2f} which is less than or equal to 0.05 ({result}); {conclusion}")
+                st.success(f" P Value is {groupsp_value:.3f} which is less than or equal to 0.05 ({result}); {conclusion}")
             else:
                 result = "Fail to Reject Null Hypothesis"
                 conclusion = f"There is not sufficient evidence to suggest that {independent_column_name} is a factor on {dependent_column_name}."
-                st.error(f" P Value is {p_value:.2f} which is greater than to 0.05 ({result}); {conclusion}")
+                st.error(f" P Value is {groupsp_value:.3f} which is greater than to 0.05 ({result}); {conclusion}")
 
             null_hypothesis = f"The independent variable {independent_column_name} has no effect on the dependent variable {dependent_column_name}."
             alternate_hypothesis = f"The independent variable {independent_column_name} has an effect on the dependent variable {dependent_column_name}."
             st.write("\n\n")
-            st.markdown(f"<span style='color: blue; font-weight: bold;'>Null Hypothesis (H0): </span> <span style='color: black;'>{null_hypothesis}</span>", unsafe_allow_html=True)
-            st.markdown(f"<span style='color: blue; font-weight: bold;'>Alternate Hypothesis (H1): </span> <span style='color: black;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: #803df5; font-weight: bold;'>Null Hypothesis (H0): </span> <span style='color: #344a80;'>{null_hypothesis}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: #803df5; font-weight: bold;'>Alternate Hypothesis (H1): </span> <span style='color: #344a80;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
 
             st.write("\n\n")
-            st.markdown(f"<span style='color: black;'>If the p-value is less than or equal to 0.05, it means that the result is statistically significant and we reject the null hypothesis. This suggests that the independent variable </span> <span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'> has an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span>. <span style='color: black;'>On the other hand, if the p-value is greater than 0.05, it means that the result is not statistically significant and we fail to reject the null hypothesis. This suggests that the independent variable </span><span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'>not have an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span><span style='color: black;'>.</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: #344a80;'>If the p-value is less than or equal to 0.05, it means that the result is statistically significant and we reject the null hypothesis. This suggests that the independent variable </span> <span style='color: #803df5;'>({independent_column_name})</span> <span style='color: #344a80;'> has an effect on the dependent variable </span> <span style='color: #803df5;'>({dependent_column_name})</span>. <span style='color: #344a80;'>On the other hand, if the p-value is greater than 0.05, it means that the result is not statistically significant and we fail to reject the null hypothesis. This suggests that the independent variable </span><span style='color: #803df5;'>({independent_column_name})</span> <span style='color: #344a80;'>not have an effect on the dependent variable </span> <span style='color: #803df5;'>({dependent_column_name})</span><span style='color: #344a80;'>.</span>", unsafe_allow_html=True)
             x = df_final[independent_column_name]
             y = df_final[dependent_column_name]
 
@@ -127,22 +112,22 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
             description="",
             color_name="violet-70",
             )
-            st.subheader(f"[📝] Descriptive Statistics for 'Y' ({dependent_column_name}) ")
+            st.subheader(f"Descriptive Statistics for 'Y' ({dependent_column_name}) ")
             st.write("\n")
 
             mean1a, median1a, mode1a, std1a = st.columns((2.5,2.5,2.5,2.5), gap="small")
             with mean1a:
-                st.metric("Mean:",f"{meanY:.2f}")
+                st.metric("Mean:",f"{meanY:.3f}")
             with median1a:
-                st.metric("Median:",f"{medianY:.2f}")
+                st.metric("Median:",f"{medianY:.3f}")
             if modeY.shape[0] == 0:
                 st.warning("This data set doesn't have a mode.")
             else:
                 for i in range(modeY.shape[0]):
                     with mode1a:
-                        st.metric("Modes:",f"{modeY[i]:.2f}")  
+                        st.metric("Modes:",f"{modeY[i]:.3f}")  
             with std1a:    
-                st.metric("Standard Deviation:",f"{stdY:.2f}")     
+                st.metric("Standard Deviation:",f"{stdY:.3f}")     
 
             Smean1a, Smedian1a, Smode1a, Sstd1a = st.columns((2.5,2.5,2.5,2.5), gap="small")
             with Smean1a:
@@ -158,7 +143,7 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
             with Sstd1a:    
                 st.info(" The standard deviation is a measure of how spread out the values are from the mean. A low standard deviation indicates that the values tend to be close to the mean, while a high standard deviation indicates that the values are spread out over a wider range.")
 
-            st.subheader(f"[💡] Insight Statistics for 'Y' ({dependent_column_name})")
+            st.subheader(f"Insight Statistics for 'Y' ({dependent_column_name})")
             st.write("\n")   
             
             if meanY > medianY:
@@ -170,31 +155,31 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
 
             if stdY > 1:
                 st.markdown(
-                    f"<span style='color: black;'> The standard deviation is low , </span> "
+                    f"<span style='color: #344a80;'> The standard deviation is low , </span> "
                     f"<span style='color: red;'>(>1)</span> "
-                    f"<span style='color: black;'>, which indicates that the data is concentrated. </span>",
+                    f"<span style='color: #344a80;'>, which indicates that the data is concentrated. </span>",
                     unsafe_allow_html=True
                 )
             else:
                 st.markdown(
-                    f"<span style='color: black;'> The standard deviation is low , </span> "
-                    f"<span style='color: blue;'>(<=1)</span> "
-                    f"<span style='color: black;'>, which indicates that the data is concentrated. </span>",
+                    f"<span style='color: #344a80;'> The standard deviation is low , </span> "
+                    f"<span style='color: #803df5;'>(<=1)</span> "
+                    f"<span style='color: #344a80;'>, which indicates that the data is concentrated. </span>",
                     unsafe_allow_html=True
                 )
 
             if meanY > (3 * stdY):
                 st.markdown(
-                    f"<span style='color: black;'> The difference between the mean is greater than 3 times the standard deviation, </span> "
-                    f"<span style='color: red;'>(Mean: {meanY:.2f}, UCL:{meanY + (3 * stdY):.2f}, LCL:{meanY - (3 * stdY):.2f})</span> "
-                    f"<span style='color: black;'>, which suggests that there might be significant outliers in the data. </span>",
+                    f"<span style='color: #344a80;'> The difference between the mean is greater than 3 times the standard deviation, </span> "
+                    f"<span style='color: red;'>(Mean: {meanY:.3f}, UCL:{meanY + (3 * stdY):.3f}, LCL:{meanY - (3 * stdY):.3f})</span> "
+                    f"<span style='color: #344a80;'>, which suggests that there might be significant outliers in the data. </span>",
                     unsafe_allow_html=True
                 )
             else:
                 st.markdown(
-                    f"<span style='color: black;'> The difference between the mean is less than or equal to 3 times the standard deviation, </span> "
-                    f"<span style='color: blue;'>(Mean: {meanY:.2f}, UCL:{meanY + (3 * stdY):.2f}, LCL:{meanY - (3 * stdY):.2f})</span> "
-                    f"<span style='color: black;'>, which suggests that the data falls within the expected range based on control limits. </span>",
+                    f"<span style='color: #344a80;'> The difference between the mean is less than or equal to 3 times the standard deviation, </span> "
+                    f"<span style='color: #803df5;'>(Mean: {meanY:.3f}, UCL:{meanY + (3 * stdY):.3f}, LCL:{meanY - (3 * stdY):.3f})</span> "
+                    f"<span style='color: #344a80;'>, which suggests that the data falls within the expected range based on control limits. </span>",
                     unsafe_allow_html=True
                 )
                         
@@ -203,9 +188,38 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
             description="",
             color_name="violet-70",
             )          
-            st.subheader("[📉] Graph")
-            st.write("A box plot, shows how a set of data is distributed visually. To visualize the distribution of numerical data and spot trends, patterns, and outliers, statistical analysis frequently uses this technique. The box represents range between the first quartile (25th percentile) and the third quartile, or the interquartile range (IQR), is shown by the box in the box plot (75th percentile). The first quartile is the percentage that divides the lowest 25% of the data from the remaining data, and the third quartile, the highest 25% of the data. The median, which is the number separating the lowest 50% from the highest 50% of the data, is the horizontal line inside the box. It gives the data a measure of central tendency and serves as a reliable guide to the typical value in the data set. The whiskers extend from the box to represent the range of the data, excluding outliers. Outliers are values that are significantly different from the rest of the data and are represented as individual dots outside the whiskers. They can represent errors in data collection, measurement, or data entry and are important to identify as they can skew the results of a statistical analysis.")
-            
+            st.subheader("Box Plot Graph")
+            # st.write("A box plot, shows how a set of data is distributed visually. To visualize the distribution of numerical data and spot trends, patterns, and outliers, statistical analysis frequently uses this technique. The box represents range between the first quartile (25th percentile) and the third quartile, or the interquartile range (IQR), is shown by the box in the box plot (75th percentile). The first quartile is the percentage that divides the lowest 25% of the data from the remaining data, and the third quartile, the highest 25% of the data. The median, which is the number separating the lowest 50% from the highest 50% of the data, is the horizontal line inside the box. It gives the data a measure of central tendency and serves as a reliable guide to the typical value in the data set. The whiskers extend from the box to represent the range of the data, excluding outliers. Outliers are values that are significantly different from the rest of the data and are represented as individual dots outside the whiskers. They can represent errors in data collection, measurement, or data entry and are important to identify as they can skew the results of a statistical analysis.")
+            # explanation = """
+            # - Is a powerful visualization tool used in statistical analysis to display the distribution of numerical data, allowing for the identification of trends, patterns, and outliers.
+            # - The box in a box plot represents the interquartile range (IQR), which provides insights into the spread and variability of the data. It encompasses the middle 50% of the data, with the box's lower edge indicating the 25th percentile (first quartile) and the upper edge representing the 75th percentile (third quartile).
+            # - The median, depicted as a horizontal line within the box, illustrates the central tendency of the data. It divides the distribution into two equal halves, with 50% of the data falling below and 50% above this value.
+            # - The whiskers extending from the box present the range of the data, excluding outliers. Typically, they extend to a length of 1.5 times the IQR from the edges of the box.
+            # - Outliers, indicated as individual data points beyond the whiskers, are values that significantly deviate from the rest of the dataset. They can be caused by various factors such as measurement errors, data entry mistakes, or genuine extreme observations. Identifying and examining outliers is crucial as they can impact the results of statistical analysis and provide valuable insights into data quality, data collection methods, or potential anomalies in the underlying process.
+            # - Offers a concise visual summary of the data, enabling researchers to compare distributions, detect skewness, assess symmetry, and make informed decisions based on the data's characteristics.
+            # """
+            # st.markdown(explanation)            
+
+            with st.expander("More information about Box Plot Graph"):
+                reminderA, reminderB, reminderC = st.columns((2.5,2.5,2.5), gap="small")
+                with reminderA:
+                    st.markdown("<b>1️⃣ Visual summary of the data:</b>", unsafe_allow_html=True)
+                    st.info("Is a powerful visualization tool used in statistical analysis to display the distribution of numerical data, allowing for the identification of trends, patterns, and outliers. Enabling researchers to compare distributions, detect skewness, assess symmetry, and make informed decisions based on the data's characteristics.")
+                with reminderB:    
+                    st.markdown("<b>2️⃣ The box :</b>", unsafe_allow_html=True)
+                    st.info("The box in a box plot represents the interquartile range (IQR), which provides insights into the spread and variability of the data. It encompasses the middle 50% of the data, with the box's lower edge indicating the 25th percentile (first quartile) and the upper edge representing the 75th percentile (third quartile).")
+                with reminderC:
+                    st.markdown("<b>3️⃣ The median:</b>", unsafe_allow_html=True)
+                    st.info("The median, depicted as a horizontal line within the box, illustrates the central tendency of the data. It divides the distribution into two equal halves, with 50% of the data falling below and 50% above this value.")
+
+                reminderD, reminderE  = st.columns((2.5,5), gap="small")
+                with reminderD:
+                    st.markdown("<b>4️⃣ The whiskers:</b>", unsafe_allow_html=True)
+                    st.info("The whiskers extending from the box present the range of the data, excluding outliers. Typically, they extend to a length of 1.5 times the IQR from the edges of the box.")
+                with reminderE:
+                    st.markdown("<b>5️⃣ The Outliers:</b>", unsafe_allow_html=True)
+                    st.info("Outliers, indicated as individual data points beyond the whiskers, are values that significantly deviate from the rest of the dataset. They can be caused by various factors such as measurement errors, data entry mistakes, or genuine extreme observations. Identifying and examining outliers is crucial as they can impact the results of statistical analysis and provide valuable insights into data quality, data collection methods, or potential anomalies in the underlying process.")
+
             fig = go.Figure()
             fig.add_trace(go.Box(
                 y=y,
@@ -294,7 +308,7 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
                     size=17,
                     family='Tahoma'
                 )
-            )            
+            )           
                         
             fig.update_layout(
                 title_text=f"Box Plot Styling Outliers: {dependent_column_name}",
@@ -304,8 +318,8 @@ def anova_result(df_final, independent_column_name, dependent_column_name, file,
 
             st.plotly_chart(fig)     
 
-            st.markdown(f"<span style='color: black;'>The x-axis of the box plot represents the independent variable </span><span style='color: blue;'>({independent_column_name})</span><span style='color: black;'> which is the variable that you want to examine the relationship between it and the dependent variable. The y-axis represents the dependent variable<span style='color: blue;'>({dependent_column_name})</span><span style='color: black;'> which is the variable you want to analyze its distribution.</span>", unsafe_allow_html=True)
-            st.markdown(f"<span style='color: black;'>In conclusion, the box plot provides a quick and effective way to visualize the distribution of the dependent variable </span><span style='color: blue;'>({dependent_column_name})</span><span style='color: black;'> across different values of the independent variable</span><span style='color: blue;'>({independent_column_name})</span><span style='color: black;'> . By examining the heights and ranges of the boxes, you can gain insights into the relationship between the dependent variable and the independent variable and identify trends, patterns, and outliers in the data.</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: #344a80;'>The x-axis of the box plot represents the independent variable </span><span style='color: #803df5;'>({independent_column_name})</span><span style='color: #344a80;'> which is the variable that you want to examine the relationship between it and the dependent variable. The y-axis represents the dependent variable<span style='color: #803df5;'>({dependent_column_name})</span><span style='color: #344a80;'> which is the variable you want to analyze its distribution.</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: #344a80;'>In conclusion, the box plot provides a quick and effective way to visualize the distribution of the dependent variable </span><span style='color: #803df5;'>({dependent_column_name})</span><span style='color: #344a80;'> across different values of the independent variable</span><span style='color: #803df5;'>({independent_column_name})</span><span style='color: #344a80;'> . By examining the heights and ranges of the boxes, you can gain insights into the relationship between the dependent variable and the independent variable and identify trends, patterns, and outliers in the data.</span>", unsafe_allow_html=True)
 
     except (UnboundLocalError, ValueError):
         st.error(f'❌ SELECTION ERROR: {dependent_column_name} column might contain categorical/string variables, please select a quantitative column.')
