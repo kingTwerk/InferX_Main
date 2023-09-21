@@ -20,7 +20,7 @@ def chi_square(df_final, file, column, test):
     data = df_final.select_dtypes(include=['object','int64'])
     
     st.set_option('deprecation.showPyplotGlobalUse', False)
-    st.header('🧮 Chi-Square')
+    st.header('Chi-Square')
     with st.expander("What is Chi-square Test?",expanded=True):   
         st.write("A chi-square test is used to test a hypothesis regarding the distribution of a categorical variable.")
         st.markdown("- The variables x and y can be any categorical variable with at least two mutually exclusive and independent levels (e.g., color: red, green, blue or gender: male, female).")    
@@ -31,18 +31,7 @@ def chi_square(df_final, file, column, test):
             }
             </style>
             ''', unsafe_allow_html=True)
-    st.subheader("[👁️‍🗨️] Table Preview:")
-    st.dataframe(df_final, height = 400)
 
-    button, chi_row, chi_col = st.columns((0.0001,1.5,4.5), gap="small")
-    rows = df_final.shape[0]
-    cols = df_final.shape[1]
-    with chi_row:
-        st.markdown(f"<span style='color: violet;'>➕ Number of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
-    with chi_col:
-        st.markdown(f"<span style='color: violet;'>➕ Number of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
-    with button:
-        st.write("")
         #if st.button("Download CSV"):
         #    data = data.select_dtypes(include=['object','int'])
         #    now = datetime.datetime.now()
@@ -51,30 +40,22 @@ def chi_square(df_final, file, column, test):
         #    save_path = os.path.join(desktop, f'chisquare_filtered_data_csv_{date_string}.csv')
         #    data.to_csv(save_path, index=False)
         #    st.success(f'File saved successfully to {save_path}!')
-    
-    colored_header(
-    label="",
-    description="",
-    color_name="violet-70",
-    )  
-    st.write("\n")    
+  
     column_names = df_final.columns.tolist()
 
     int_column_names = [col for col in column_names if df_final[col].dtype == 'int64']
     object_column_names = [col for col in column_names if df_final[col].dtype == 'object']
     filtered_column_names = int_column_names + object_column_names
-    independent_column_name = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", object_column_names)
-   
-    st.write("\n")    
+    independent_column_name = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", [""] + object_column_names)
 
     dependent_column_name = column
-
-    st.write("\n")    
 
     if independent_column_name  == dependent_column_name:
         st.error("❌ Both columns are the same. Please select different columns.")
     else:           
         try:
+            if independent_column_name == "":
+                st.write("")
             if (not np.issubdtype(df_final[dependent_column_name], np.number) and df_final[dependent_column_name].nunique() < 2):
                 st.error(f'❌ SELECTION ERROR #1: {dependent_column_name} column might contain categorical/string variables, column can be either discrete or continuous data with atleast 2 unique values.')
             
@@ -164,34 +145,27 @@ def chi_square(df_final, file, column, test):
 
                 std_y = np.std(df_final[dependent_column_name])
 
-                st.subheader("[✍] Chi-Square Test")
-                # CS1, CS2 = st.columns((1,5), gap="small")
-                # with CS1:
-                #     st.write("")
-                # with CS2:
-                #     with st.expander("Understanding the Chi-square score and Critical Value",expanded=False):   
-                #         st.write("A chi-square score value is a measure of the difference between the observed and expected frequencies of the outcomes of a set of events or variables. It is useful for analyzing differences in categorical variables, especially those nominal in nature.")
-                #         st.write("")
-                #         st.write("The chi-square value will assist us in determining the statistical significance of the difference between expected and observed data.")
-                #         st.write("")
-                #         st.write("Imagine you are a teacher and you want to know if your students are evenly distributed among four classes: A, B, C, and D. You count the number of students in each class and compare it to the expected number of students in each class if they were evenly distributed. The difference between the observed and expected number of students in each class is the chi-square score. If the chi-square score is high, it means that the students are not evenly distributed among the classes.")
-                #         st.write("")
-                #         st.write("Now, imagine that you want to know if the difference between the observed and expected number of students in each class is statistically significant. You can use the chi-square critical value to determine this. The chi-square critical value is a threshold for statistical significance for certain hypothesis tests and defines confidence intervals for certain parameters. If the chi-square score is greater than the chi-square critical value, then the results of the test are statistically significant.")
+                st.subheader("Table Preview:")
+                st.dataframe(df_final, height = 400)
+
+                button, chi_row, chi_col = st.columns((0.0001,1.5,4.5), gap="small")
+                rows = df_final.shape[0]
+                cols = df_final.shape[1]
+                with chi_row:
+                    st.markdown(f"<span style='color: #803df5;'>➕ Number of rows : </span> <span style='color: #803df5;'>{rows}</span>", unsafe_allow_html=True)
+                with chi_col:
+                    st.markdown(f"<span style='color: #803df5;'>➕ Number of columns : </span> <span style='color: #803df5;'>{cols}</span>", unsafe_allow_html=True)
+                with button:
+                    st.write("")
+                colored_header(
+                label="",
+                description="",
+                color_name="violet-70",
+                )  
+                st.subheader("Chi-Square Test")
 
                 st.write("\n")
-                # chi_cola1, chi_colb2, = st.columns((1,5), gap="small")  
-                # with chi_cola1:
-                #     #st.write(f'Chi-Square Score: {chi2_score_1:.2f}',  prefix="\t")
-                #     st.metric("Chi-Square Score:",f"{chi2_score_1:.2f}")
-                # with chi_cola1:
-                #     #st.write(f'Critical Value: {critical_value_1:.2f}', prefix="\t")
-                #     st.metric("Critical Value:",f"{critical_value_1:.2f}")
-                # with chi_colb2:            
-                #     if chi2_score_1 > critical_value_1:
-                #         st.success(f"*  Reject the null hypothesis - the observed frequencies are significantly different from the expected frequencies. This suggests that there is a relationship between the two categorical variables.")
-                #     else:
-                #         st.error(f"*  Fail to reject the null hypothesis - the observed frequencies are not significantly different from the expected frequencies. This suggests that there is no relationship between the two categorical variables. The observed frequencies are not significantly different from the expected frequencies.")
-                    
+   
                 with st.expander("Understanding the Significance Level and P-value",expanded=False):   
                     st.write("The p-value represents the probability that the differences between the groups are due to chance. A small p-value (usually less than 0.05) indicates that the differences between the groups are unlikely to be due to chance, and we can reject the null hypothesis that there is no difference between the groups. In other words, if the p-value is small, it suggests that there is a significant difference between at least two of the groups.")
                     st.write("")
@@ -201,40 +175,40 @@ def chi_square(df_final, file, column, test):
                     st.write("")
                     st.write("You would conduct an ANOVA test and obtain a p-value of 0.02. This means that there is a 2% chance of observing the differences in exam scores between the three classes due to chance. Since the p-value is less than the significance level of 0.05, we reject the null hypothesis and conclude that there is a statistically significant difference in exam scores between at least two of the classes. This information could be useful in identifying areas for improvement or to make decisions about which class may need additional resources or attention.")
                     
-                pvalue1a, pvalue2a = st.columns((1,5), gap="small")
+                pvalue1a, pvalue2a = st.columns((2,5), gap="small")
                 with pvalue1a:
-                    st.metric("P-value",f"{p_value_1:.2f}")       
+                    st.metric("P-value",f"{p_value_1:.3f}")       
 
                 with pvalue2a:    
-                    st.metric("Significance level:",f"{100-p_value_1:.2f}")
+                    st.metric("Significance level:",f"{100-p_value_1:.3f}")
 
                 if p_value_1 < 0.05:
-                    st.success(f' With p-value of {p_value_1:.2f} that is less than 0.05, it means that the results for the relationship between {independent_column_name} and {dependent_column_name} are statistically significant.')
+                    st.success(f' With p-value of {p_value_1:.3f} that is less than 0.05, it means that the results for the relationship between {independent_column_name} and {dependent_column_name} are statistically significant.')
                     st.write("There is a less than 5% chance that the observed difference between the groups happened due to natural differences alone. This provides strong evidence that the independent variable has a significant impact on the dependent variable.")
                 else:
-                    st.warning(f' With p-value of {p_value_1:.2f} that is greater than 0.05, it means that the results for the relationship between {independent_column_name} and {dependent_column_name} are not statistically significant.')
+                    st.warning(f' With p-value of {p_value_1:.3f} that is greater than 0.05, it means that the results for the relationship between {independent_column_name} and {dependent_column_name} are not statistically significant.')
                     st.write("There is a greater than or equal to 5% chance that the observed difference between the groups happened due to natural differences alone. This suggests that the independent variable does not have a significant impact on the dependent variable.")   
 
                 st.write("\n")
-                st.subheader("[🧪] Hypothesis Testing")
+                st.subheader("Hypothesis Testing")
                 st.write("\n")
                 if p_value_1 <= 0.05:
                     result = "Reject Null Hypothesis"
                     conclusion = "There is sufficient evidence to suggest that {} is a factor on {}.".format(independent_column_name, dependent_column_name)
-                    st.success("P Value is {:.2f} which is less than or equal to 0.05 ({}); {}".format(p_value_1, result, conclusion))
+                    st.success("P Value is {:.3f} which is less than or equal to 0.05 ({}); {}".format(p_value_1, result, conclusion))
                 else:
                     result = "Fail to Reject Null Hypothesis"
                     conclusion = "There is not sufficient evidence to suggest that {} is a factor on {}.".format(independent_column_name, dependent_column_name)
-                    st.warning("P Value is {:.2f} which is greater than to 0.05 ({}); {}".format(p_value_1, result, conclusion))
+                    st.warning("P Value is {:.3f} which is greater than to 0.05 ({}); {}".format(p_value_1, result, conclusion))
 
                 null_hypothesis = "The independent variable {} has no effect on the dependent variable {}.".format(independent_column_name, dependent_column_name)
                 alternate_hypothesis = "The independent variable {} has an effect on the dependent variable {}.".format(independent_column_name, dependent_column_name)
                 st.write("\n\n")
-                st.markdown(f"<span style='color: blue; font-weight: bold;'>Null Hypothesis (H0): </span> <span style='color: black;'>{null_hypothesis}</span>", unsafe_allow_html=True)
-                st.markdown(f"<span style='color: blue; font-weight: bold;'>Alternate Hypothesis (H1): </span> <span style='color: black;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: #803df5; font-weight: bold;'>Null Hypothesis (H0): </span> <span style='color: #344a80;'>{null_hypothesis}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: #803df5; font-weight: bold;'>Alternate Hypothesis (H1): </span> <span style='color: #344a80;'>{alternate_hypothesis}</span>", unsafe_allow_html=True)
 
                 st.write("\n\n")
-                st.markdown(f"<span style='color: black;'>If the p-value is less than or equal to 0.05, it means that the result is statistically significant and we reject the null hypothesis. This suggests that the independent variable </span> <span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'> has an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span>. <span style='color: black;'>On the other hand, if the p-value is greater than 0.05, it means that the result is not statistically significant and we fail to reject the null hypothesis. This suggests that the independent variable </span><span style='color: blue;'>({independent_column_name})</span> <span style='color: black;'>not have an effect on the dependent variable </span> <span style='color: blue;'>({dependent_column_name})</span><span style='color: black;'>.</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: #344a80;'>If the p-value is less than or equal to 0.05, it means that the result is statistically significant and we reject the null hypothesis. This suggests that the independent variable </span> <span style='color: #803df5;'>({independent_column_name})</span> <span style='color: #344a80;'> has an effect on the dependent variable </span> <span style='color: #803df5;'>({dependent_column_name})</span>. <span style='color: #344a80;'>On the other hand, if the p-value is greater than 0.05, it means that the result is not statistically significant and we fail to reject the null hypothesis. This suggests that the independent variable </span><span style='color: #803df5;'>({independent_column_name})</span> <span style='color: #344a80;'>not have an effect on the dependent variable </span> <span style='color: #803df5;'>({dependent_column_name})</span><span style='color: #344a80;'>.</span>", unsafe_allow_html=True)
 
                 colored_header(
                 label="",
@@ -243,72 +217,71 @@ def chi_square(df_final, file, column, test):
                 )  
 
 
-                st.write("\n")
-                st.subheader(f"[📝] Descriptive Statistics for 'Y' ({dependent_column_name})")
-                st.write("\n")
-                mean, median, mode, std_dev = st.columns((2.5,2.5,2.5,2.5), gap="small")
-                with mean:
-                    st.metric("Mean:",f"{mean_y:.2f}")
-                with median:
-                    st.metric("Median:",f"{median_y:.2f}")
-                with mode:
-                    st.metric("Mode:",f"{mode_y:.2f}")
-                with std_dev:
-                    st.metric("Standard Deviation:",f"{std_y:.2f}")
+                # st.write("\n")
+                # st.subheader(f"Descriptive Statistics for 'Y' ({dependent_column_name})")
+                # st.write("\n")
+                # mean, median, mode, std_dev = st.columns((2.5,2.5,2.5,2.5), gap="small")
+                # with mean:
+                #     st.metric("Mean:",f"{mean_y:.3f}")
+                # with median:
+                #     st.metric("Median:",f"{median_y:.3f}")
+                # with mode:
+                #     st.metric("Mode:",f"{mode_y:.3f}")
+                # with std_dev:
+                #     st.metric("Standard Deviation:",f"{std_y:.3f}")
                 
-                meanS, medianS, modeS, std_devS = st.columns((2.5,2.5,2.5,2.5), gap="small")
-                with meanS:
-                    st.info(" The mean is the average of all the values in the data set. It is calculated by adding up all the values and then dividing by the total number of values.")
-                with medianS:
-                    st.info(" The median is the middle value when the data is arranged in order. It is the value that separates the data into two equal halves.")
-                with modeS:
-                    st.info(" The mode is the value that appears most frequently in the data set. A data (set can have one mode, more than one mode, or no mode at all.")
-                with std_devS:
-                    st.info(" The standard deviation is a measure of how spread out the values are from the mean. A low standard deviation indicates that the values tend to be close to the mean, while a high standard deviation indicates that the values are spread out over a wider range.")
+                # meanS, medianS, modeS, std_devS = st.columns((2.5,2.5,2.5,2.5), gap="small")
+                # with meanS:
+                #     st.info(" The mean is the average of all the values in the data set. It is calculated by adding up all the values and then dividing by the total number of values.")
+                # with medianS:
+                #     st.info(" The median is the middle value when the data is arranged in order. It is the value that separates the data into two equal halves.")
+                # with modeS:
+                #     st.info(" The mode is the value that appears most frequently in the data set. A data (set can have one mode, more than one mode, or no mode at all.")
+                # with std_devS:
+                #     st.info(" The standard deviation is a measure of how spread out the values are from the mean. A low standard deviation indicates that the values tend to be close to the mean, while a high standard deviation indicates that the values are spread out over a wider range.")
 
-                st.write("\n")
-                st.subheader(f"[💡] Insight Statistics for 'Y' ({dependent_column_name})")
-                st.write("\n")
-                if mean_y > median_y:
-                    st.write(f' The mean is higher than the median, which suggests that the data is skewed to the right.')
-                elif mean_y > median_y:
-                    st.write(f' The mean is lower than the median, which suggests that the data is skewed to the left.')
-                else:
-                    st.write(f' The mean is equal to the median, which suggests that the data is symmetrical.')
+                # st.write("\n")
+                # st.subheader(f"Insight Statistics for 'Y' ({dependent_column_name})")
+                # st.write("\n")
+                # if mean_y > median_y:
+                #     st.write(f' The mean is higher than the median, which suggests that the data is skewed to the right.')
+                # elif mean_y > median_y:
+                #     st.write(f' The mean is lower than the median, which suggests that the data is skewed to the left.')
+                # else:
+                #     st.write(f' The mean is equal to the median, which suggests that the data is symmetrical.')
 
-                if std_y > 1:
-                    st.markdown(
-                        f"<span style='color: black;'> The standard deviation is low , </span> "
-                        f"<span style='color: red;'>(>1)</span> "
-                        f"<span style='color: black;'>, which indicates that the data is concentrated. </span>",
-                        unsafe_allow_html=True
-                    )
-                else:
-                    st.markdown(
-                        f"<span style='color: black;'> The standard deviation is low , </span> "
-                        f"<span style='color: blue;'>(<=1)</span> "
-                        f"<span style='color: black;'>, which indicates that the data is concentrated. </span>",
-                        unsafe_allow_html=True
-                    )
+                # if std_y > 1:
+                #     st.markdown(
+                #         f"<span style='color: #344a80;'> The standard deviation is low , </span> "
+                #         f"<span style='color: red;'>(>1)</span> "
+                #         f"<span style='color: #344a80;'>, which indicates that the data is concentrated. </span>",
+                #         unsafe_allow_html=True
+                #     )
+                # else:
+                #     st.markdown(
+                #         f"<span style='color: #344a80;'> The standard deviation is low , </span> "
+                #         f"<span style='color: #803df5;'>(<=1)</span> "
+                #         f"<span style='color: #344a80;'>, which indicates that the data is concentrated. </span>",
+                #         unsafe_allow_html=True
+                #     )
 
-                if mean_y > (3 * std_y):
-                    st.markdown(
-                        f"<span style='color: black;'> The difference between the mean is greater than 3 times the standard deviation, </span> "
-                        f"<span style='color: red;'>(Mean: {mean_y:.2f}, UCL:{mean_y + (3 * std_y):.2f}, LCL:{mean_y - (3 * std_y):.2f})</span> "
-                        f"<span style='color: black;'>, which suggests that there might be significant outliers in the data. </span>",
-                        unsafe_allow_html=True
-                    )
-                else:
-                    st.markdown(
-                        f"<span style='color: black;'> The difference between the mean is less than or equal to 3 times the standard deviation, </span> "
-                        f"<span style='color: blue;'>(Mean: {mean_y:.2f}, UCL:{mean_y + (3 * std_y):.2f}, LCL:{mean_y - (3 * std_y):.2f})</span> "
-                        f"<span style='color: black;'>, which suggests that the data falls within the expected range based on control limits. </span>",
-                        unsafe_allow_html=True
-                    )
-              
+                # if mean_y > (3 * std_y):
+                #     st.markdown(
+                #         f"<span style='color: #344a80;'> The difference between the mean is greater than 3 times the standard deviation, </span> "
+                #         f"<span style='color: red;'>(Mean: {mean_y:.3f}, UCL:{mean_y + (3 * std_y):.3f}, LCL:{mean_y - (3 * std_y):.3f})</span> "
+                #         f"<span style='color: #344a80;'>, which suggests that there might be significant outliers in the data. </span>",
+                #         unsafe_allow_html=True
+                #     )
+                # else:
+                #     st.markdown(
+                #         f"<span style='color: #344a80;'> The difference between the mean is less than or equal to 3 times the standard deviation, </span> "
+                #         f"<span style='color: #803df5;'>(Mean: {mean_y:.3f}, UCL:{mean_y + (3 * std_y):.3f}, LCL:{mean_y - (3 * std_y):.3f})</span> "
+                #         f"<span style='color: #344a80;'>, which suggests that the data falls within the expected range based on control limits. </span>",
+                #         unsafe_allow_html=True
+                #     )
 
         except (TypeError,KeyError):
-            st.error(f'❌ SELECTION ERROR #5: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the Chi-square test.')         
-
+           #  st.error(f'❌ SELECTION ERROR #5: {dependent_column_name} column might contain categorical/string variables, column must be transformed first before performing the Chi-square test.')         
+            st.write("")
         except (ValueError,AttributeError):
             st.error(f'❌ Both [{dependent_column_name}] and [{independent_column_name}] columns need to be categorical/discrete with at least 2 unique values.')  
