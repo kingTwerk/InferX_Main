@@ -3,6 +3,7 @@ import pandas as pd
 import ydata_profiling as yd
 import streamlit as st
 from streamlit_pandas_profiling import st_profile_report
+from streamlit.components.v1 import html
 
 from pandas.errors import EmptyDataError
 from streamlit_lottie import st_lottie
@@ -34,11 +35,32 @@ import time
 
 from PIL import Image
 
-st.set_page_config(page_title="INFER-X (Local-updated 042523)", layout='wide', initial_sidebar_state='expanded', page_icon="👁️‍🗨️")
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
+from statsmodels.stats.multicomp import MultiComparison
 
 
-lottie_hacking = load_lottiefile("lottiefiles/hacker.json")
-lottie_hello = load_lottieurl("https://assets1.lottiefiles.com/private_files/lf30_yalmtkoy.json")
+st.set_page_config(page_title="Infer-X", layout='wide', initial_sidebar_state='expanded', page_icon='./st_webLogo.png')
+
+# # Read the contents of the CSS file
+# with open('loader.css', 'r') as css_file:
+#     css_code = css_file.read()
+
+# # Inject the CSS code into the Streamlit app
+# st.markdown(f'<style>{css_code}</style>', unsafe_allow_html=True)
+
+# # Render the HTML code
+# html_code = """
+# <div class='loader'>
+#     <div class="three-body">
+#     <div class="three-body__dot"></div>
+#     <div class="three-body__dot"></div>
+#     <div class="three-body__dot"></div>
+#     </div>
+# </div>
+# """
+# st.markdown(html_code, unsafe_allow_html=True)
 
 @st.cache_data
 def get_img_as_base64(file):
@@ -46,7 +68,12 @@ def get_img_as_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
-img = get_img_as_base64("sidebar_rotate.jpg")
+img = get_img_as_base64("st_sidebar.jpg")
+
+lottie_hacking = load_lottiefile("lottiefiles/hacker.json")
+lottie_hello = load_lottieurl("https://assets1.lottiefiles.com/private_files/lf30_yalmtkoy.json")
+
+
 # top - bottom - left - right - top left - top right - bottom left - bottom right
 page_bg_img = f"""
 <style>
@@ -71,7 +98,12 @@ st.markdown(""" <style>
 footer {visibility: hidden;}
 </style> """, unsafe_allow_html=True)
 
-st.title("🕵🏽 Inferential Statistical Tests") 
+image = Image.open('st_topBanner.png')
+st.image(image, use_column_width="always", output_format="PNG")
+
+st.write("\n")
+
+#st.title("Inferential Statistical Tests") 
 # image = Image.open("test.png")
 # st.image(image, use_column_width=True)
 # st.markdown(""" <style> .font {                                          
@@ -80,32 +112,49 @@ st.title("🕵🏽 Inferential Statistical Tests")
 # st.markdown('<p class="font">Inferential Statistical Tests Recommender</p>', unsafe_allow_html=True)
 
 def main():
+
+
     file = st.file_uploader("FYI: It is recommended to upload your data in csv format, it will help lessen the processing time.", type=["csv", "xlsx"])
 
     if file:
         show_sidebar = True
     else:
         show_sidebar = False
-        st.markdown("🚧 Before uploading your data file to Infer-X, it's essential to ensure that your data is clean and well-prepared. Follow these simple steps to clean your data:")
-        reminderA, reminderB, reminderC, reminderD, reminderE, reminderF = st.columns((2.5,2.5,2.5,2.5,2.5,2.5), gap="small")
+        st.write("\n")
+        st.markdown("<b>Before uploading your data file to Infer-X, it's essential to ensure that your data is clean and well-prepared. Follow these simple steps to clean your data:</b>", unsafe_allow_html=True)
+        reminderA, reminderB, reminderC = st.columns((2.5,2.5,2.5), gap="small")
         with reminderA:
-            st.warning("1️⃣ Remove any unnecessary columns:")
-            st.write("- Review your dataset and eliminate any columns that are irrelevant or contain no useful information for your analysis.")
+            st.markdown("<b>1️⃣ Remove any unnecessary columns:</b>", unsafe_allow_html=True)
+            # st.info("1️⃣ Remove any unnecessary columns:")
+            # st.write("Review your dataset and eliminate any columns that are irrelevant or contain no useful information for your analysis.")
+            st.info("Review your dataset and eliminate any columns that are irrelevant or contain no useful information for your analysis.")
         with reminderB:    
-            st.warning("2️⃣ Check for missing values:")
-            st.write("- Identify and handle missing values in your dataset. You can either delete rows with missing data or impute values based on specific rules or techniques.")
+            st.markdown("<b>2️⃣ Check for missing values:</b>", unsafe_allow_html=True)
+            # st.info("2️⃣ Check for missing values:")
+            # st.write("Identify and handle missing values in your dataset. You can either delete rows with missing data or impute values based on specific rules or techniques.")
+            st.info("Identify and handle missing values in your dataset. You can either delete rows with missing data or impute values based on specific rules or techniques.")
         with reminderC:
-            st.warning("3️⃣ Address data inconsistencies:")
-            st.write("- Look out for inconsistent formatting, spelling errors, or different representations of the same category. Standardize your data to ensure consistency and accuracy.")
+            st.markdown("<b>3️⃣ Address data inconsistencies:</b>", unsafe_allow_html=True)
+            # st.info("3️⃣ Address data inconsistencies:")
+            # st.write("Look out for inconsistent formatting, spelling errors, or different representations of the same category. Standardize your data to ensure consistency and accuracy.")
+            st.info("Look out for inconsistent formatting, spelling errors, or different representations of the same category. Standardize your data to ensure consistency and accuracy.")
+
+        reminderD, reminderE, reminderF = st.columns((2.5,2.5,2.5), gap="small")
         with reminderD:
-            st.warning("4️⃣ Handle outliers:")
-            st.write("- Identify any extreme or erroneous values that may significantly impact your analysis. Consider removing outliers or applying appropriate techniques to handle them.")
+            st.markdown("<b>4️⃣ Handle outliers:</b>", unsafe_allow_html=True)
+            # st.info("4️⃣ Handle outliers:")
+            # st.write("Identify any extreme or erroneous values that may significantly impact your analysis. Consider removing outliers or applying appropriate techniques to handle them.")
+            st.info("Identify any extreme or erroneous values that may significantly impact your analysis. Consider removing outliers or applying appropriate techniques to handle them.")
         with reminderE:
-            st.warning("5️⃣ Validate data types:")
-            st.write("-  Ensure that variables are assigned the correct data types (e.g., numeric, categorical, date) to avoid data interpretation issues during analysis. ")
+            st.markdown("<b>5️⃣ Validate data types:</b>", unsafe_allow_html=True)
+            # st.info("5️⃣ Validate data types:")
+            # st.write("Ensure that variables are assigned the correct data types (e.g., numeric, categorical, date) to avoid data interpretation issues during analysis. ")
+            st.info("Ensure that variables are assigned the correct data types (e.g., numeric, categorical, date) to avoid data interpretation issues during analysis. ")
         with reminderF:
-            st.warning("6️⃣ Resolve duplicates:")
-            st.write("- Identify and eliminate any duplicate records or entries in your dataset to prevent skewing your results.")
+            st.markdown("<b>6️⃣ Resolve duplicates:</b>", unsafe_allow_html=True)
+            # st.info("6️⃣ Resolve duplicates:")
+            # st.write("Identify and eliminate any duplicate records or entries in your dataset to prevent skewing your results.")
+            st.info("Identify and eliminate any duplicate records or entries in your dataset to prevent skewing your results.")
     if show_sidebar: 
         
         if file is not None:
@@ -131,7 +180,8 @@ def main():
                 if df.shape[0] == 0:
                     st.sidebar.warning("WARNING: The selected file or sheet is empty.")
 
-            st.sidebar.title("👟 Infer-X Steps:") 
+            st.sidebar.header("Inferential Statistical Steps:") 
+            st.sidebar.markdown(f"<span style='color: #344a80; font-weight: normal; font-size: 13px;'> <i>Please proceed with the guided steps provided below, where you can select the variables and inferential tests of your preference.</i></span>", unsafe_allow_html=True)
             # st.sidebar.image(image, use_column_width=True)
             object_cols = df.select_dtypes(include=['object']).columns
             int_cols = df.select_dtypes(include=['int64']).columns
@@ -224,7 +274,8 @@ def main():
             #     color_name="violet-70",
             # )   
             
-            st.sidebar.write("1️⃣ FILTER BY COLUMN:")
+            #st.sidebar.write("1️⃣ FILTER BY COLUMN (optional):")
+            st.sidebar.markdown(f"<span style='color: #344a80; font-weight: normal; font-size: 14px;'> 1️⃣ FILTER BY COLUMN (optional): </span>", unsafe_allow_html=True)
             filter_checkbox = st.sidebar.checkbox("Filter (to exclude values)",key="checkbox3")
             
             if filter_checkbox: 
@@ -269,33 +320,32 @@ def main():
                         description="",
                         color_name="violet-70",
                         )   
-                    st.subheader("[🔍] Variable Insights:")
-                    tab1, tab2, tab3, tab4, tab5, tab6, tab7= st.tabs(["Ⅰ.┊NEEDS NORMALIZATION┊","Ⅱ.┊MEASUREMENT TYPES┊","Ⅲ.┊TEST SUGGESTIONS┊", "Ⅳ.┊LEVELS OF MEASUREMENTS┊", "Ⅴ.┊VARIABLE TYPES┊","Ⅵ.┊ALL TEST SUGGESTIONS┊","Ⅶ.┊UNIQUE VARIABLE┊"])
+                    st.subheader("Variable Insights:")
+                    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Ⅰ.┊NEEDS NORMALIZATION┊","Ⅱ.┊MEASUREMENT TYPES┊","Ⅲ.┊TEST SUGGESTIONS┊", "Ⅳ.┊LEVELS OF MEASUREMENTS┊", "Ⅴ.┊VARIABLE TYPES┊","Ⅵ.┊ALL TEST SUGGESTIONS┊","Ⅶ.┊UNIQUE VARIABLE┊","Ⅷ.┊PANDAS DTYPE┊"])
                     if not column:
                         st.write("")
-                    #with tab8:
-                    #    for i, (col_name, dtype) in enumerate(df_final.dtypes.iteritems(), start=1):
-                    #        st.write(f"{i}.&nbsp; <font color='blue'>{col_name}</font>: {dtype}", unsafe_allow_html=True)
-                        
+                    with tab8:
+                        for i, (col_name, dtype) in enumerate(df_final.dtypes.iteritems(), start=1):
+                            st.write(f"{i}.&nbsp; <b><font color=#803df5>{col_name}</font></b>: {dtype}", unsafe_allow_html=True)    
                     with tab7:
                         for i, option in enumerate(column_options, start=1):
                             name, dtype = option.split(":")
-                            st.write(f"{i}.&nbsp; <font color='blue'>{name.strip()} ({dtype.strip()}):</font> {df_final[name.strip()].nunique()} unique values", unsafe_allow_html=True)
+                            st.write(f"{i}.&nbsp; <b><font color=#803df5>{name.strip()} ({dtype.strip()}):</font></b> {df_final[name.strip()].nunique()} unique values", unsafe_allow_html=True)
                     with tab2:
                         for i, (name, dtype, count) in enumerate(zip(["CONTINUOUS", "DISCRETE", "BINARY", "NOMINAL", "ORDINAL"], ["float64", "int64", "int64", "object", "object"], [continuous_count, discrete_count, binary_count, nominal_count, ordinal_count]), start=1):
-                            st.write(f"{i}.&nbsp; <font color='blue'>{name} ({dtype}):</font> {count}", unsafe_allow_html=True)                     
+                            st.write(f"{i}.&nbsp; <b><font color=#803df5>{name} ({dtype}):</font></b> {count}", unsafe_allow_html=True)                     
                     with tab3:
                         for i, (test_name, count) in enumerate(zip(['ONE-WAY ANOVA', 'TWO-WAY ANOVA', 'SIMPLE LINEAR REGRESSION', 'LOGISTIC REGRESSION', 'CHI-SQUARE'], [anova_count, twowayanova_count, single_linear_regression_count, logistic_regression_count, chi_square_count]), start=1):
-                            st.write(f"{i}.&nbsp; <font color='blue'>{test_name} :</font> {count}", unsafe_allow_html=True)  
+                            st.write(f"{i}.&nbsp; <b><font color=#803df5>{test_name} :</font></b> {count}", unsafe_allow_html=True)  
                     with tab4:  
                         for i, option in enumerate(column_options, start=1):
-                            st.write(f"{i}.&nbsp; <font color='blue'>{option.split(':')[0]} </font>: {option.split(':')[1]}", unsafe_allow_html=True)      
+                            st.write(f"{i}.&nbsp; <b><font color=#803df5>{option.split(':')[0]} </font></b>: {option.split(':')[1]}", unsafe_allow_html=True)      
                     with tab5:
                         for i, numerical in enumerate(column_numerical, start=1):
-                            st.write(f"{i}.&nbsp; <font color='blue'>{numerical.split(':')[0]}</font>: {numerical.split(':')[1]}", unsafe_allow_html=True)              
+                            st.write(f"{i}.&nbsp; <b><font color=#803df5>{numerical.split(':')[0]}</font></b>: {numerical.split(':')[1]}", unsafe_allow_html=True)              
                     with tab6:
                         for index, (column, tests) in enumerate(recommendations.items(), start=1):
-                            st.write(f"{index}.&nbsp; <font color='blue'>{column}</font>: {', '.join(tests)}", unsafe_allow_html=True)       
+                            st.write(f"{index}.&nbsp; <b><font color=#803df5>{column}</font></b>: {', '.join(tests)}", unsafe_allow_html=True)       
                     with tab1:
             
                         needsNormalization = []
@@ -307,7 +357,7 @@ def main():
 
                         if len(needsNormalization) > 0:
                             for i, (column, z_scores) in enumerate(needsNormalization, start=1):
-                                st.write(f"{i}.&nbsp; <font color='blue'>{column}</font> (z-score: {z_scores.max() - z_scores.min():.2f})", unsafe_allow_html=True)
+                               st.write(f"{i}.&nbsp; <b><font color='#803df5'>{column}</font></b> (z-score: {z_scores.max() - z_scores.min():.2f})", unsafe_allow_html=True)
                         else:
                             st.write("No columns need to be normalized.")
                                     
@@ -333,10 +383,10 @@ def main():
 
                 if option2=='Complete Mode':
                     mode='complete'
-                    st.sidebar.warning('FYI: May cause the app to run overtime or fail for large datasets due to computational limit.')
+                    st.sidebar.info('FYI: May cause the app to run overtime or fail for large datasets due to computational limit.')
                 elif option2=='Minimal Mode':
                     mode='minimal'
-                    st.sidebar.warning('FYI: Disables expensive computations such as correlations and duplicate row detection.')
+                    st.sidebar.info('FYI: Disables expensive computations such as correlations and duplicate row detection.')
 
                 if st.sidebar.button('Generate Report'):
                     if mode=='complete':
@@ -369,7 +419,7 @@ def main():
                         description="",
                         color_name="violet-70",
                         )  
-                        st.subheader("[🖨️] RAW Data Report:")
+                        st.subheader("RAW Data Report:")
                         st_profile_report(profile) 
                         file_name = f"raw_data_overview_{file.name.split('.')[0]}.html"
                         profile.to_file(file_name)
@@ -395,6 +445,16 @@ def main():
             #     unsafe_allow_html=True,
             # )
             # st.sidebar.image(image2,  use_column_width="auto")
-
+            
+            st.sidebar.write("---") 
+            st.sidebar.write("For more information on the following statistical tests, click on the links below:")
+            st.sidebar.write("* [Inferential Statistics [CNXU]](https://cnxu.sumtotal.host/Core/pillarRedirect?relyingParty=LM&url=core%2Factivitydetails%2FViewActivityDetails%3FActivityId%3D17627%26UserMode%3D0)")
+            st.sidebar.write("* [Statistical & Hypothesis Tests: Getting Started with Hypothesis Testing [CNXU]](https://cnxu.sumtotal.host/Core/pillarRedirect?relyingParty=LM&url=core%2Factivitydetails%2FViewActivityDetails%3FActivityId%3D20763%26UserMode%3D0)")
+            #st.sidebar.write("* [Linear/Logistic Regression [CNXU]](https://CNXU.sumtotal.host/core/pillarRedirect?relyingParty=LM&url=app%2Fmanagement%2FLMS_ActDetails.aspx%3FActivityId%3D18118%26UserMode%3D0)")
+            #st.sidebar.write("* [Statistical & Hypothesis Tests: Using Non-Parametric Tests & Anova Analysis [CNXU]](https://CNXU.sumtotal.host/core/pillarRedirect?relyingParty=LM&url=app%2Fmanagement%2FLMS_ActDetails.aspx%3FActivityId%3D18994%26UserMode%3D0)")
+            st.sidebar.write("* [P-Value (easily explained with an example) [Youtube]](https://www.youtube.com/watch?v=Xni5YVlgiiQ)")
+            st.sidebar.write("* [ANOVA Test [Youtube Playlist]](https://www.youtube.com/@datatab/search?query=Anova)")
+            st.sidebar.write("* [Chi-Square Test [Youtube Playlist]](https://www.youtube.com/@datatab/search?query=Chi-square)")
+            st.sidebar.write("* [Regression Test [Youtube Playlist]](https://www.youtube.com/@datatab/search?query=Regression)")
 if __name__ == '__main__':
-    main()
+    main() 
