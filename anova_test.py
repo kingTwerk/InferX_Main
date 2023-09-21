@@ -9,12 +9,12 @@ from functions import is_ordinal, normalize_numpy, transform_column
 def anova(df_final, file, column):
 
         st.set_option('deprecation.showPyplotGlobalUse', False)
-        st.header('🧮 One-Way ANOVA')
+        st.header('One-Way ANOVA')
         st.write("\n")
         
         with st.expander("What is One-way ANOVA?",expanded=True):   
             st.write("The test is used to determine if there is a significant difference in the means of the dependent variable across the different levels of the independent variable.")
-            st.markdown("- y: a quantitative variable (e.g., height, age)")
+            st.markdown("- y: a numerical variable (e.g., height, age)")
             st.markdown("- x: a categorical variable with at least three levels (e.g., class A, class B, class C)")
 
             st.write("")        
@@ -29,15 +29,16 @@ def anova(df_final, file, column):
         column_names = df_final.columns.tolist()
 
         column_names = [col for col in column_names if df_final[col].dtype == 'object']
-        independent_column_name = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", column_names, key='anova_column')
+        independent_column_name = st.sidebar.selectbox("4️⃣ SELECT THE 'x' FIELD (independent variable):", [""] + column_names, key='anova_column')
         
         dependent_column_name = column
         
         if independent_column_name == dependent_column_name:
             st.error("❌ Both columns are the same. Please select different columns.")
         else:           
-            
-                if (not np.issubdtype(df_final[dependent_column_name], np.number) and df_final[dependent_column_name].nunique() < 2):
+                if independent_column_name == "":
+                    st.write("")
+                elif (not np.issubdtype(df_final[dependent_column_name], np.number) and df_final[dependent_column_name].nunique() < 2):
                     st.error(f'❌ SELECTION ERROR #1: {dependent_column_name} column might contain categorical/string variables, column can be either discrete or continuous data with atleast 2 unique values.')
                 
                 elif (df_final[independent_column_name].nunique() < 2):
@@ -49,8 +50,8 @@ def anova(df_final, file, column):
                 elif (pd.api.types.is_string_dtype(df_final[independent_column_name])):
 
                     numeric_cols = df_final._get_numeric_data().columns
-                    categorical_cols = df_final.columns.difference(numeric_cols)
-                    num_cols = df_final.select_dtypes(include=['int64', 'float64']).columns.tolist()
+                    #categorical_cols = df_final.columns.difference(numeric_cols)
+                    #num_cols = df_final.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
                     needs_normalization = []
                     for col in numeric_cols:
@@ -65,7 +66,7 @@ def anova(df_final, file, column):
                     else:
                         default_values = []
 
-                    selected_cols = st.sidebar.multiselect("👉 COLUMN TO BE NORMALIZED (for selected 'y' field above):", needs_normalization, default=default_values)
+                    selected_cols = st.sidebar.multiselect("COLUMN TO BE NORMALIZED (for selected 'y' field above):", needs_normalization, default=default_values)
 
                     df_final = df_final.copy()
       
@@ -109,16 +110,16 @@ def anova(df_final, file, column):
 
                     df_final[independent_column_name] = transformed_col
 
-                    st.subheader("[👁️‍🗨️] Data Preview:")
+                    st.subheader("Data Preview:")
                     st.dataframe(df_final, height = 400)
 
                     button,anova_row, anova_col = st.columns((0.0001,1.5,4.5), gap="small")
                     rows = df_final.shape[0]
                     cols = df_final.shape[1]
                     with anova_row:
-                        st.markdown(f"<span style='color: violet;'>➕ Number of rows : </span> <span style='color: black;'>{rows}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: #803df5;'>➕ Number of rows : </span> <span style='color: #803df5;'>{rows}</span>", unsafe_allow_html=True)
                     with anova_col:
-                        st.markdown(f"<span style='color: violet;'>➕ Number of columns : </span> <span style='color: black;'>{cols}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: #803df5;'>➕ Number of columns : </span> <span style='color: #803df5;'>{cols}</span>", unsafe_allow_html=True)
 
                     colored_header(
                         label="",
