@@ -5,11 +5,17 @@ from streamlit_extras.colored_header import colored_header
 from scipy.stats import f
 from two_way_anova_test_results import two_anova_result
 from functions import is_ordinal, normalize_numpy, transform_column
+import pingouin as pg
+import scipy.stats as stats
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+
 
 def twoanova(df_final, file, column):
 
         st.set_option('deprecation.showPyplotGlobalUse', False)
-        st.header('🧮 Two-Way ANOVA')
+        st.header('Two-Way ANOVA')
         st.write("\n")
         
         with st.expander("What is Two-way ANOVA?", expanded=True):   
@@ -36,6 +42,8 @@ def twoanova(df_final, file, column):
         column_names_x2 = [""] + [col for col in column_names if col != independent_column_name]
         independent_column_name2 = st.sidebar.selectbox("5️⃣ SELECT THE 'x2' FIELD (second independent variable):", column_names_x2, key='anova_column2')
         dependent_column_name = column
+
+
         
         if independent_column_name == dependent_column_name:
             st.error("❌ Both columns are the same. Please select different columns.")
@@ -53,96 +61,96 @@ def twoanova(df_final, file, column):
                 
                 elif (pd.api.types.is_string_dtype(df_final[independent_column_name])):
 
-                    numeric_cols = df_final._get_numeric_data().columns
+                    # numeric_cols = df_final._get_numeric_data().columns
 
-                    needs_normalization = []
-                    for col in numeric_cols:
-                        z_scores = (df_final[col] - df_final[col].mean()) / df_final[col].std()
-                        if (z_scores.max() - z_scores.min()) > 3: 
-                            needs_normalization.append(col)
+                    # needs_normalization = []
+                    # for col in numeric_cols:
+                    #     z_scores = (df_final[col] - df_final[col].mean()) / df_final[col].std()
+                    #     if (z_scores.max() - z_scores.min()) > 3: 
+                    #         needs_normalization.append(col)
 
-                    common_cols = set([independent_column_name, dependent_column_name]).intersection(set(needs_normalization))
+                    # common_cols = set([independent_column_name, dependent_column_name]).intersection(set(needs_normalization))
 
-                    if common_cols:
-                        default_values = list(common_cols)
-                    else:
-                        default_values = []
+                    # if common_cols:
+                    #     default_values = list(common_cols)
+                    # else:
+                    #     default_values = []
 
-                    selected_cols = st.sidebar.multiselect("👉 COLUMN TO BE NORMALIZED (for selected 'y' field above):", needs_normalization, default=default_values)
+                    # selected_cols = st.sidebar.multiselect("COLUMN TO BE NORMALIZED (for selected 'y' field above):", needs_normalization, default=default_values)
 
-                    df_final = df_final.copy()
+                    # df_final = df_final.copy()
       
-                    if len(selected_cols) > 0:
-                        method = "Z-Score"
-                        numeric_selected_cols = [col for col in selected_cols if col in numeric_cols]
-                        categorical_selected_cols = [col for col in selected_cols if col not in numeric_cols]
-                        df_norm = normalize_numpy(df_final, numeric_selected_cols, categorical_selected_cols, method)
-                        not_selected_cols = df_final.columns.difference(selected_cols)
-                        df_final = pd.concat([df_norm, df_final[not_selected_cols]], axis=1)
+                    # if len(selected_cols) > 0:
+                    #     method = "Z-Score"
+                    #     numeric_selected_cols = [col for col in selected_cols if col in numeric_cols]
+                    #     categorical_selected_cols = [col for col in selected_cols if col not in numeric_cols]
+                    #     df_norm = normalize_numpy(df_final, numeric_selected_cols, categorical_selected_cols, method)
+                    #     not_selected_cols = df_final.columns.difference(selected_cols)
+                    #     df_final = pd.concat([df_norm, df_final[not_selected_cols]], axis=1)
 
-                    levels = np.empty(df_final.shape[1], dtype=object) 
-                    for i, col in enumerate(df_final.columns):  
-                        if df_final[col].dtype == 'bool' or df_final[col].dtype == 'category':
-                            levels[i] = "Binary"
-                        elif df_final[col].dtype == np.int64:
-                            levels[i] = "Discrete"
-                        elif df_final[col].dtype == np.float64:
-                            levels[i] = "Continuous"
-                        elif df_final[col].dtype == object:
-                            if is_ordinal(df_final[col]):
-                                levels[i] = "Ordinal"
-                            else:
-                                levels[i] = "Nominal"
+                    # levels = np.empty(df_final.shape[1], dtype=object) 
+                    # for i, col in enumerate(df_final.columns):  
+                    #     if df_final[col].dtype == 'bool' or df_final[col].dtype == 'category':
+                    #         levels[i] = "Binary"
+                    #     elif df_final[col].dtype == np.int64:
+                    #         levels[i] = "Discrete"
+                    #     elif df_final[col].dtype == np.float64:
+                    #         levels[i] = "Continuous"
+                    #     elif df_final[col].dtype == object:
+                    #         if is_ordinal(df_final[col]):
+                    #             levels[i] = "Ordinal"
+                    #         else:
+                    #             levels[i] = "Nominal"
 
-                    independent_column_index = df_final.columns.get_loc(independent_column_name)
-                    if levels[independent_column_index] == "Nominal" and len(df_final[independent_column_name].unique()) > 2:
-                        recommended_method = "One-Hot"
-                        #st.write("👉 One-Hot Encoding is recommended for the selected 'x1' field.")
-                    elif levels[independent_column_index] == "Binary" and len(df_final[independent_column_name].unique()) == 2:
-                        recommended_method = "Label"
-                    elif levels[independent_column_index] == "Ordinal":
-                        recommended_method = "Ordinal"
-                    else:
-                        recommended_method = None
+                    # independent_column_index = df_final.columns.get_loc(independent_column_name)
+                    # if levels[independent_column_index] == "Nominal" and len(df_final[independent_column_name].unique()) > 2:
+                    #     recommended_method = "One-Hot"
+                    #     #st.write("👉 One-Hot Encoding is recommended for the selected 'x1' field.")
+                    # elif levels[independent_column_index] == "Binary" and len(df_final[independent_column_name].unique()) == 2:
+                    #     recommended_method = "Label"
+                    # elif levels[independent_column_index] == "Ordinal":
+                    #     recommended_method = "Ordinal"
+                    # else:
+                    #     recommended_method = None
 
-                    if recommended_method:
-                        method = recommended_method
-                    else:
-                        method = "Label"
+                    # if recommended_method:
+                    #     method = recommended_method
+                    # else:
+                    #     method = "Label"
 
-                    transformed_col = transform_column(df_final, independent_column_name, method)
+                    # transformed_col = transform_column(df_final, independent_column_name, method)
 
-                    df_final[independent_column_name] = transformed_col
+                    # df_final[independent_column_name] = transformed_col
 
-                    independent_column_index2 = df_final.columns.get_loc(independent_column_name2)
-                    if levels[independent_column_index2] == "Nominal" and len(df_final[independent_column_name2].unique()) > 2:
-                        recommended_method2 = "One-Hot"
-                    elif levels[independent_column_index2] == "Binary" and len(df_final[independent_column_name2].unique()) == 2:
-                        recommended_method2 = "Label"
-                    elif levels[independent_column_index2] == "Ordinal":
-                        recommended_method2 = "Ordinal"
-                    else:
-                        recommended_method2 = None
+                    # independent_column_index2 = df_final.columns.get_loc(independent_column_name2)
+                    # if levels[independent_column_index2] == "Nominal" and len(df_final[independent_column_name2].unique()) > 2:
+                    #     recommended_method2 = "One-Hot"
+                    # elif levels[independent_column_index2] == "Binary" and len(df_final[independent_column_name2].unique()) == 2:
+                    #     recommended_method2 = "Label"
+                    # elif levels[independent_column_index2] == "Ordinal":
+                    #     recommended_method2 = "Ordinal"
+                    # else:
+                    #     recommended_method2 = None
 
-                    if recommended_method2:
-                        method2 = recommended_method2
-                    else:
-                        method2 = "Label"
+                    # if recommended_method2:
+                    #     method2 = recommended_method2
+                    # else:
+                    #     method2 = "Label"
 
-                    transformed_col2 = transform_column(df_final, independent_column_name2, method2)
+                    # transformed_col2 = transform_column(df_final, independent_column_name2, method2)
 
-                    df_final[independent_column_name2] = transformed_col2
+                    # df_final[independent_column_name2] = transformed_col2
 
-                    st.subheader("[👁️‍🗨️] Data Preview:")
+                    st.subheader("Data Preview:")
                     st.dataframe(df_final, height = 400)
 
                     button,anova_row, anova_col = st.columns((0.0001,1.5,4.5), gap="small")
                     rows = df_final.shape[0]
                     cols = df_final.shape[1]
                     with anova_row:
-                        st.markdown(f"<span style='color: violet;'>➕ Number of rows : </span> <span style='color: #D3D3D3;'>{rows}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: #803df5;'>➕ Number of rows : </span> <span style='color: #803df5;'>{rows}</span>", unsafe_allow_html=True)
                     with anova_col:
-                        st.markdown(f"<span style='color: violet;'>➕ Number of columns : </span> <span style='color: #D3D3D3;'>{cols}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: #803df5;'>➕ Number of columns : </span> <span style='color: #803df5;'>{cols}</span>", unsafe_allow_html=True)
 
                     colored_header(
                         label="",
